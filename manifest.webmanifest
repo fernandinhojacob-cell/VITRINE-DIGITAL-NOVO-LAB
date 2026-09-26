@@ -1,0 +1,10 @@
+{
+  "name": "Vitrine Digital Player",
+  "short_name": "Vitrine Digital",
+  "start_url": "./player/index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "any"
+}

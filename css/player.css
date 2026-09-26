@@ -1,0 +1,106 @@
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden;font-family:Arial,Helvetica,sans-serif}body{color:#fff}.player-root{position:fixed;inset:0;background:#000;overflow:hidden}.stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000}.stage>*{width:100%;height:100%;display:block}.stage img{object-fit:cover}.stage video{object-fit:contain;background:#000}.slide-text{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:6vw;font-size:clamp(28px,5vw,92px);font-weight:700;line-height:1.08;background:#111;color:#fff}.status{position:fixed;left:12px;bottom:12px;padding:7px 10px;border-radius:6px;background:rgba(0,0,0,.65);font-size:12px;z-index:20;opacity:.0;transition:opacity .2s}.status.visible{opacity:1}.controls{position:fixed;right:18px;bottom:18px;display:flex;gap:8px;z-index:30;opacity:0;transition:opacity .2s}.player-root:hover .controls,.controls:focus-within{opacity:1}.controls button{border:0;border-radius:8px;padding:10px 14px;font-size:14px;cursor:pointer}.empty{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;z-index:15}.empty-card{display:flex;flex-direction:column;gap:10px;text-align:center;padding:30px}.empty-card strong{font-size:28px}.empty-card span{opacity:.7}.player-root.kiosk .status{opacity:0!important}.player-root.kiosk .controls{display:none}.player-root.portrait .stage img{object-fit:cover}.player-root.portrait .stage video{object-fit:cover}
+
+/* V2.1 — orientação por tela */
+.player-root.landscape .stage img,
+.player-root.landscape .stage video { object-fit: contain; }
+
+.player-root.portrait .stage img,
+.player-root.portrait .stage video { object-fit: cover; }
+
+.player-root.portrait .slide-text {
+  padding: 8vw 7vw;
+  font-size: clamp(28px, 6vw, 82px);
+}
+
+@media (orientation: portrait) {
+  .player-root:not(.landscape) .stage img,
+  .player-root:not(.landscape) .stage video { object-fit: cover; }
+}
+
+/* 4.14.1: respeita o atributo hidden do overlay de espera. */
+.empty[hidden]{display:none!important}
+
+/* 4.15 — orientação real do canvas.
+   Horizontal = 16:9. Vertical = 9:16.
+   Em monitor de teste com orientação oposta, o canvas é centralizado com barras pretas. */
+.player-root.landscape .stage{
+  width:min(100vw, calc(100vh * 16 / 9));
+  height:min(100vh, calc(100vw * 9 / 16));
+  left:50%; top:50%; right:auto; bottom:auto;
+  transform:translate(-50%,-50%);
+}
+.player-root.portrait .stage{
+  width:min(100vw, calc(100vh * 9 / 16));
+  height:min(100vh, calc(100vw * 16 / 9));
+  left:50%; top:50%; right:auto; bottom:auto;
+  transform:translate(-50%,-50%);
+}
+.player-root.landscape .stage img,
+.player-root.landscape .stage video,
+.player-root.portrait .stage img,
+.player-root.portrait .stage video{
+  object-fit:contain;
+}
+
+/* 4.16.1 — Player mobile edge-to-edge */
+html,body{margin:0!important;padding:0!important;width:100%;height:100%;background:#000;overflow:hidden}
+@supports (height:100dvh){
+  html,body,.player-root{width:100vw!important;height:100dvh!important;min-height:100dvh!important}
+}
+@media (hover:none) and (pointer:coarse), (max-width:768px){
+  .player-root{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;background:#000!important;overflow:hidden!important}
+  .player-root .stage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;transform:none!important}
+  .player-root .stage img,.player-root .stage video{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important}
+  .hud,.controls,.player-controls,.status,.badge,.btn-fullscreen{display:none!important}
+}
+
+/* V4.19 - fora do horario: aparência de tela desligada */
+.player-root.blackout{background:#000!important;cursor:none!important}
+.player-root.blackout .stage{background:#000!important}
+.player-root.blackout .status,.player-root.blackout .controls,.player-root.blackout .empty{display:none!important}
+
+
+/* 4.31 — Samsung The Frame / Tizen TV mode */
+html.tv-mode,html.tv-mode body{width:100vw!important;height:100vh!important;min-width:100vw!important;min-height:100vh!important;overscroll-behavior:none!important}
+html.tv-mode body{position:fixed!important;inset:0!important;cursor:none!important;background:#000!important}
+html.tv-mode .player-root{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;background:#000!important;overflow:hidden!important}
+html.tv-mode .player-root .stage{position:absolute!important;inset:0!important;margin:0!important;max-width:none!important;max-height:none!important}
+html.tv-mode .player-root.landscape .stage{width:100vw!important;height:100vh!important;left:0!important;top:0!important;right:0!important;bottom:0!important;transform:none!important}
+html.tv-mode .player-root.landscape .stage img,html.tv-mode .player-root.landscape .stage video{width:100%!important;height:100%!important;object-fit:contain!important;background:#000!important}
+html.tv-mode .controls,html.tv-mode .status{display:none!important}
+html.tv-mode .empty{background:#000!important}
+@media (min-width:769px){html.tv-mode .player-root{touch-action:none}}
+
+
+/* 4.31.1 — The Frame instalada na vertical: canvas total + mídia preenchendo a tela */
+html.tv-mode .player-root.portrait .stage{position:absolute!important;inset:0!important;width:100vw!important;height:100vh!important;left:0!important;top:0!important;right:0!important;bottom:0!important;transform:none!important;margin:0!important;max-width:none!important;max-height:none!important}
+html.tv-mode .player-root.portrait .stage img,
+html.tv-mode .player-root.portrait .stage video{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:center center!important;background:#000!important}
+html.tv-mode .player-root.portrait .stage iframe{width:100%!important;height:100%!important;border:0!important}
+
+/* 5.0.4-TF — Samsung The Frame fullscreen edge-to-edge */
+html.tv-mode,html.tv-mode body,
+html.tv-mode .player-root,
+html.tv-mode .player-root .stage{
+  margin:0!important;padding:0!important;
+  width:100vw!important;height:100vh!important;
+  min-width:100vw!important;min-height:100vh!important;
+  max-width:none!important;max-height:none!important;
+  position:fixed!important;inset:0!important;
+  left:0!important;top:0!important;right:0!important;bottom:0!important;
+  transform:none!important;overflow:hidden!important;background:#000!important;
+}
+html.tv-mode .player-root .stage img,
+html.tv-mode .player-root .stage video,
+html.tv-mode .player-root .stage iframe{
+  display:block!important;width:100%!important;height:100%!important;
+  min-width:100%!important;min-height:100%!important;
+  max-width:none!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;
+  object-fit:cover!important;object-position:center center!important;
+  background:#000!important;
+}
+html.tv-mode .hud,html.tv-mode .controls,html.tv-mode .player-controls,
+html.tv-mode .status,html.tv-mode .badge,html.tv-mode .btn-fullscreen{
+  display:none!important;
+}
