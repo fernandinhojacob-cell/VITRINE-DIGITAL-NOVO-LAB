@@ -74,6 +74,25 @@
  #schedules .section-head{display:grid;grid-template-columns:1fr}
  #schedules .section-head .btn{width:100%}
 }
+</style><style>
+/* 7.11.1 — tabela de Programação vira cartões no celular */
+@media(max-width:700px){
+ #schedules .table-wrap{padding:0!important;background:transparent!important;border:0!important;overflow:visible!important}
+ #schedules table,#schedules thead,#schedules tbody,#schedules tr,#schedules th,#schedules td{display:block!important;width:100%!important}
+ #schedules thead{display:none!important}
+ #schedules tbody{display:grid!important;gap:14px}
+ #schedules tbody tr{padding:18px!important;border:1px solid var(--border,#24415d)!important;border-radius:18px!important;background:var(--card,#0d2135)!important;overflow:hidden}
+ #schedules tbody td{display:grid!important;grid-template-columns:105px minmax(0,1fr)!important;gap:10px!important;align-items:start!important;padding:8px 0!important;border:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
+ #schedules tbody td:nth-child(1)::before{content:"Nome";font-weight:700;color:var(--muted,#91a6bd)}
+ #schedules tbody td:nth-child(2)::before{content:"Playlist";font-weight:700;color:var(--muted,#91a6bd)}
+ #schedules tbody td:nth-child(3)::before{content:"Tela";font-weight:700;color:var(--muted,#91a6bd)}
+ #schedules tbody td:nth-child(4)::before{content:"Período";font-weight:700;color:var(--muted,#91a6bd)}
+ #schedules tbody td:nth-child(5)::before{content:"Horário";font-weight:700;color:var(--muted,#91a6bd)}
+ #schedules tbody td:nth-child(6)::before{content:"Dias";font-weight:700;color:var(--muted,#91a6bd)}
+ #schedules tbody td:nth-child(7){display:flex!important;grid-template-columns:none!important;gap:8px!important;flex-wrap:wrap!important;padding-top:14px!important;border-top:1px solid var(--border,#24415d)!important;margin-top:6px}
+ #schedules tbody td:nth-child(7)::before{content:none!important}
+ #schedules tbody td:nth-child(7) .btn,#schedules tbody td:nth-child(7) button{flex:1 1 110px!important;min-height:44px!important}
+}
 </style></head><body>
 <header class="topbar"><button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>7.0 SaaS LAB</small></div><div class="top-actions"><span id="companyBadge" class="badge">Empresa…</span><span id="connectionBadge" class="badge">Demo</span><button id="refreshBtn" class="btn ghost">Atualizar</button></div></header>
 <div id="mobileBackdrop" class="mobile-backdrop"></div>
