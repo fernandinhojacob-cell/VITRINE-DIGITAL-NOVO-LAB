@@ -55,6 +55,25 @@
  #playlists .section-head{display:grid;grid-template-columns:1fr}
  #playlists .section-head .btn{width:100%}
 }
+</style><style>
+/* 7.11 — Programação: organização mobile sem alterar lógica */
+#schedules .schedule-guide{margin:0 0 16px;padding:12px 14px;border:1px solid var(--border,#24415d);border-radius:14px;background:rgba(25,140,255,.06);line-height:1.5}
+@media(max-width:700px){
+ #schedules.section{padding-top:24px!important}
+ #schedules .section-head{align-items:flex-start;gap:14px}
+ #schedules .section-head h1{font-size:clamp(30px,9vw,42px);line-height:1.05;margin:0}
+ #schedules .section-head .btn{flex:0 0 auto}
+ #schedules .toolbar{display:grid!important;grid-template-columns:1fr;gap:12px}
+ #schedules .toolbar input,#schedules .toolbar select{width:100%;min-width:0}
+ #schedules .card{min-width:0}
+ #schedules .actions,#schedules .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+ #schedules .actions .btn,#schedules .row-actions .btn{min-height:44px}
+ #schedules label{line-height:1.35}
+}
+@media(max-width:430px){
+ #schedules .section-head{display:grid;grid-template-columns:1fr}
+ #schedules .section-head .btn{width:100%}
+}
 </style></head><body>
 <header class="topbar"><button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>7.0 SaaS LAB</small></div><div class="top-actions"><span id="companyBadge" class="badge">Empresa…</span><span id="connectionBadge" class="badge">Demo</span><button id="refreshBtn" class="btn ghost">Atualizar</button></div></header>
 <div id="mobileBackdrop" class="mobile-backdrop"></div>
