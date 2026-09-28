@@ -105,7 +105,7 @@
     }
 
     if (!data?.session && !isLogin) {
-      location.replace("admin/login.html");
+      location.replace("login.html");
     }
 
   } catch (e) {
