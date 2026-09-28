@@ -1,10 +1,10 @@
 {
-  "name": "Vitrine Digital Player",
+  "name": "Vitrine Digital PRO",
   "short_name": "Vitrine Digital",
-  "start_url": "./player/index.html",
+  "start_url": "./admin/index.html",
   "scope": "./",
-  "display": "fullscreen",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "display": "standalone",
+  "background_color": "#061525",
+  "theme_color": "#061525",
   "orientation": "any"
 }
