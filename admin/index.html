@@ -37,6 +37,24 @@
   #media .toolbar{grid-template-columns:1fr}
   #media .cards,#media .media-grid{grid-template-columns:1fr!important}
 }
+</style><style>
+/* 7.10 — Playlists: refinamento visual/responsivo, sem alterar dados ou Player */
+#playlists .playlist-workflow-note{margin:0 0 16px;padding:12px 14px;border:1px solid var(--border,#24415d);border-radius:14px;background:rgba(25,140,255,.06)}
+@media(max-width:700px){
+ #playlists.section{padding-top:24px!important}
+ #playlists .section-head{align-items:flex-start;gap:14px}
+ #playlists .section-head h1{font-size:clamp(30px,9vw,42px);line-height:1.05;margin:0}
+ #playlists .section-head .btn{flex:0 0 auto}
+ #playlists .toolbar{display:grid!important;grid-template-columns:1fr;gap:12px}
+ #playlists .toolbar input,#playlists .toolbar select{width:100%;min-width:0}
+ #playlists .card{min-width:0}
+ #playlists .actions,#playlists .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+ #playlists .actions .btn,#playlists .row-actions .btn{min-height:44px}
+}
+@media(max-width:430px){
+ #playlists .section-head{display:grid;grid-template-columns:1fr}
+ #playlists .section-head .btn{width:100%}
+}
 </style></head><body>
 <header class="topbar"><button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>7.0 SaaS LAB</small></div><div class="top-actions"><span id="companyBadge" class="badge">Empresa…</span><span id="connectionBadge" class="badge">Demo</span><button id="refreshBtn" class="btn ghost">Atualizar</button></div></header>
 <div id="mobileBackdrop" class="mobile-backdrop"></div>
