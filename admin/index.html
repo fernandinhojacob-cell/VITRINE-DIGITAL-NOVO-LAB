@@ -93,6 +93,21 @@
  #schedules tbody td:nth-child(7)::before{content:none!important}
  #schedules tbody td:nth-child(7) .btn,#schedules tbody td:nth-child(7) button{flex:1 1 110px!important;min-height:44px!important}
 }
+</style><style>
+/* 7.12 — Biblioteca compacta no celular */
+@media(max-width:700px){
+ #media .cards,#media .media-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+ #media .card{min-width:0!important;border-radius:16px!important;overflow:hidden!important}
+ #media .card img{width:100%!important;height:150px!important;object-fit:cover!important}
+ #media .card video{display:none!important}
+ #media .card .actions,#media .card .row-actions{gap:6px!important}
+ #media .card .actions .btn,#media .card .row-actions .btn,#media .card button{min-height:38px!important;padding:8px 10px!important;font-size:13px!important}
+ #media .card h3,#media .card h4{font-size:16px!important;line-height:1.2!important}
+ #media .card p,#media .card .muted{font-size:12px!important}
+}
+@media(max-width:360px){
+ #media .cards,#media .media-grid{grid-template-columns:1fr!important}
+}
 </style></head><body>
 <header class="topbar"><button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>7.0 SaaS LAB</small></div><div class="top-actions"><span id="companyBadge" class="badge">Empresa…</span><span id="connectionBadge" class="badge">Demo</span><button id="refreshBtn" class="btn ghost">Atualizar</button></div></header>
 <div id="mobileBackdrop" class="mobile-backdrop"></div>
