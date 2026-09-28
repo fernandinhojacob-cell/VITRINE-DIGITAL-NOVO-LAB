@@ -21,14 +21,21 @@ async function loadPlans(){
  const {data,error}=await db.from("plans").select("id,name,screen_limit,monthly_price,active,sort_order").order("sort_order",{ascending:true});
  if(error){host.innerHTML=`<p class="muted">Erro ao carregar planos: ${esc(error.message)}</p>`;return}
  host.innerHTML=(data||[]).map(p=>`<div class="master-plan" data-plan-card="${p.id}">
-  <div class="master-plan-head"><strong>${esc(p.name)}</strong><span class="badge">${p.active?"Ativo":"Inativo"}</span></div>
-  <label>Nome<input data-plan-name value="${esc(p.name)}"></label>
-  <label>Limite de telas<input data-plan-screens type="number" min="1" max="1000" value="${Number(p.screen_limit||1)}"></label>
-  <label>Valor mensal (R$)<input data-plan-price type="number" min="0" step="0.01" value="${Number(p.monthly_price||0).toFixed(2)}"></label>
-  <div class="master-plan-actions"><button class="btn" data-plan-save="${p.id}">Salvar</button></div>
+  <div class="master-plan-summary">
+   <div class="master-plan-title"><strong>${esc(p.name)}</strong><span class="master-plan-meta">${Number(p.screen_limit||1)} tela${Number(p.screen_limit||1)===1?"":"s"} · R$ ${Number(p.monthly_price||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})}/mês</span></div>
+   <div class="master-plan-summary-actions"><span class="badge">${p.active?"Ativo":"Inativo"}</span><button class="btn ghost master-plan-edit" type="button" data-plan-edit>Editar</button></div>
+  </div>
+  <div class="master-plan-editor" hidden>
+   <label>Nome<input data-plan-name value="${esc(p.name)}"></label>
+   <label>Limite de telas<input data-plan-screens type="number" min="1" max="1000" value="${Number(p.screen_limit||1)}"></label>
+   <label>Valor mensal (R$)<input data-plan-price type="number" min="0" step="0.01" value="${Number(p.monthly_price||0).toFixed(2)}"></label>
+   <div class="master-plan-actions"><button class="btn" data-plan-save="${p.id}">Salvar</button><button class="btn ghost" type="button" data-plan-cancel>Cancelar</button></div>
+  </div>
  </div>`).join("")||'<p class="muted">Nenhum plano cadastrado.</p>';
 }
 $("#masterPlans").onclick=async e=>{
+ const edit=e.target.closest("[data-plan-edit]");if(edit){const card=edit.closest("[data-plan-card]"),editor=card.querySelector(".master-plan-editor");editor.hidden=false;edit.hidden=true;return}
+ const cancel=e.target.closest("[data-plan-cancel]");if(cancel){const card=cancel.closest("[data-plan-card]"),editor=card.querySelector(".master-plan-editor"),editBtn=card.querySelector("[data-plan-edit]");editor.hidden=true;editBtn.hidden=false;return}
  const b=e.target.closest("[data-plan-save]");if(!b)return;
  const card=b.closest("[data-plan-card]"),name=card.querySelector("[data-plan-name]").value.trim(),
  limit=Number(card.querySelector("[data-plan-screens]").value),price=Number(card.querySelector("[data-plan-price]").value);
