@@ -101,7 +101,7 @@ async function render(){
  const [screens,media,playlists,schedules,groups,items,scenes,syncStatus]=await Promise.all([load('screens'),load('media'),load('playlists'),load('schedules'),load('groups'),load('playlist_items'),load('scenes'),loadLatestSyncStatus()]);
  // Keep the in-memory state synchronized with Supabase. Modal editors and actions use `demo` as the current UI state.
  if(db){demo.screens=screens;demo.media=media;demo.playlists=playlists;demo.schedules=schedules;demo.groups=groups;demo.playlist_items=items;demo.scenes=scenes;}
- const online=screens.filter(s=>s.status==='online').length;qs('#statScreens').textContent=screens.length;qs('#statScreensSub').textContent=`${online} online`;qs('#statMedia').textContent=media.length;qs('#statPlaylists').textContent=playlists.length;qs('#statSchedules').textContent=schedules.length;qs('#modeLabel').textContent=db?'SUPABASE':'DEMO LOCAL';updateConnectionState();
+ const online=screens.filter(s=>monitorIsOnline(s)).length;qs('#statScreens').textContent=screens.length;qs('#statScreensSub').textContent=`${online} online`;qs('#statMedia').textContent=media.length;qs('#statPlaylists').textContent=playlists.length;qs('#statSchedules').textContent=schedules.length;qs('#modeLabel').textContent=db?'SUPABASE':'DEMO LOCAL';updateConnectionState();
  renderScreens(screens,playlists);renderMedia(media);renderPlaylists(playlists,media,items);renderSchedules(schedules,playlists,screens,groups);renderGroups(groups,screens,playlists);renderDashboard(screens,playlists,media,items,schedules);renderMonitor(screens,playlists,media,items,schedules,syncStatus);renderCampaigns(screens,playlists,media,items,schedules,groups);renderReports();
 }
 
