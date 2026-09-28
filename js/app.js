@@ -6,6 +6,22 @@ const demo={};for(const k of Object.keys(blank))demo[k]=JSON.parse(localStorage.
 const save=()=>Object.keys(demo).forEach(k=>localStorage.setItem('vd3_'+k,JSON.stringify(demo[k])));
 const qs=s=>document.querySelector(s), esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 let vdLastSuccessfulSync=0,vdHadLoadError=false;
+let vdCompany=null;
+const VD_COMPANY_TABLES=new Set(['screens','media','playlists','schedules','groups','scenes']);
+async function initCompanyContext(){
+ if(!db)return null;
+ const {data:{session}}=await db.auth.getSession();
+ if(!session)return null;
+ const {data:members,error}=await db.from('company_members').select('company_id,role,active').eq('user_id',session.user.id).eq('active',true).limit(1);
+ if(error)throw error;
+ const member=members?.[0];
+ if(!member)throw new Error('Seu usuário ainda não está vinculado a uma empresa.');
+ const {data:company,error:companyError}=await db.from('companies').select('id,name,slug,active').eq('id',member.company_id).single();
+ if(companyError)throw companyError;
+ vdCompany={...company,role:member.role};
+ const badge=qs('#companyBadge');if(badge){badge.textContent=company.name+(member.role==='owner'?' • Proprietário':'');badge.title='Empresa ativa no painel';}
+ return vdCompany;
+}
 function updateConnectionState(){const b=qs('#connectionBadge');if(!b)return;if(!db){b.textContent='Demo local';b.classList.remove('connection-stale');return}if(vdHadLoadError){const ago=vdLastSuccessfulSync?Math.max(0,Math.floor((Date.now()-vdLastSuccessfulSync)/60000)):null;b.textContent=ago===null?'Supabase • sem atualização':`Supabase • dados de há ${ago} min`;b.classList.add('connection-stale')}else{b.textContent='Supabase conectado';b.classList.remove('connection-stale')}}
 function vdToast(message,type='info'){let n=qs('#vdToast');if(!n){n=document.createElement('div');n.id='vdToast';n.className='vd-toast';n.setAttribute('role','status');n.setAttribute('aria-live','polite');document.body.appendChild(n)}n.className='vd-toast '+type;n.textContent=message;n.classList.add('show');clearTimeout(vdToast._t);vdToast._t=setTimeout(()=>n.classList.remove('show'),3200)}
 function vdBusy(btn,busy,label='Processando…'){if(!btn)return;if(busy){if(!btn.dataset.vdLabel)btn.dataset.vdLabel=btn.textContent;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent=label}else{btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=btn.dataset.vdLabel||btn.textContent;delete btn.dataset.vdLabel}}
@@ -43,7 +59,7 @@ async function load(table){
  if(error){console.error('load '+table,error);vdHadLoadError=true;updateConnectionState();vdToast('Falha ao atualizar '+table+'. Mantendo os últimos dados carregados.','error');return demo[table]||[]}
  vdLastSuccessfulSync=Date.now();return data||[]
 }
-async function insert(table,row){if(db){const {data,error}=await db.from(table).insert(row).select().single();if(error)throw error;return data}const x={id:uid(),created_at:new Date().toISOString(),...row};(demo[table]||(demo[table]=[])).push(x);save();return x}
+async function insert(table,row){if(db){if(VD_COMPANY_TABLES.has(table)){if(!vdCompany)await initCompanyContext();row={...row,company_id:vdCompany?.id};if(!row.company_id)throw new Error('Empresa ativa não identificada. Entre novamente no painel.');}const {data,error}=await db.from(table).insert(row).select().single();if(error)throw error;return data}const x={id:uid(),created_at:new Date().toISOString(),...row};(demo[table]||(demo[table]=[])).push(x);save();return x}
 async function update(table,id,patch){
  if(db){
   const {data,error}=await db.from(table).update(patch).eq('id',id).select('*');
@@ -360,7 +376,7 @@ async function addPlaylistItem(pid){
 function wireDrag(){document.querySelectorAll('.drag-item').forEach(el=>{el.ondragstart=e=>e.dataTransfer.setData('text/plain',el.dataset.item)});document.querySelectorAll('[data-playlist]').forEach(zone=>{zone.ondragover=e=>e.preventDefault();zone.ondrop=async e=>{e.preventDefault();const id=e.dataTransfer.getData('text/plain');const item=demo.playlist_items.find(i=>i.id===id);if(!item)return;item.playlist_id=zone.dataset.playlist;item.sort_order=demo.playlist_items.filter(i=>i.playlist_id===zone.dataset.playlist).length;save();if(db)await update('playlist_items',id,{playlist_id:item.playlist_id,sort_order:item.sort_order});render()}})}
 function previewPlaylist(pid){const p=demo.playlists.find(x=>x.id===pid),its=demo.playlist_items.filter(i=>i.playlist_id===pid).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));const m=its.map(i=>demo.media.find(x=>x.id===i.media_id)).filter(Boolean);openModal('Pré-visualização',`<div class="card" style="padding:0;overflow:hidden"><div id="previewBox" style="aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center"></div></div><p class="muted" style="margin-top:10px">${esc(p?.name||'Playlist')} · ${m.length} itens</p>`);let idx=0;const box=qs('#previewBox');const show=()=>{if(!m.length){box.innerHTML='<span class="muted">Playlist vazia</span>';return}const x=m[idx%m.length];box.innerHTML=x.type==='image'?`<img src="${esc(mediaSrc(x))}" style="width:100%;height:100%;object-fit:contain">`:x.type==='video'?`<video src="${esc(mediaSrc(x))}" autoplay muted controls style="width:100%;height:100%;object-fit:contain"></video>`:`<div style="padding:30px;font-size:22px;text-align:center">${esc(x.text_content||x.file_url||x.name)}</div>`;idx++;setTimeout(show,Math.max(2,Number(x.duration||5))*1000)};show()}
 ['screenSearch','screenFilter','mediaSearch','mediaTypeFilter'].forEach(id=>{const el=qs('#'+id);if(el)el.addEventListener('input',render)});
-render();bootLocalPlayer();
+(async()=>{try{if(db)await initCompanyContext();await render();await bootLocalPlayer();}catch(e){console.error('Inicialização SaaS',e);vdToast('Não foi possível identificar sua empresa: '+(e?.message||e),'error');}})();
 
 // V4.8 - Editor visual local (preserva o core V3.1.1)
 (function(){
