@@ -14,6 +14,19 @@
  .stats,.stat-grid,.kpi-grid{grid-template-columns:1fr 1fr!important}
  h1{font-size:30px!important;line-height:1.05!important}
 }
+</style><style>
+/* Master 7.7 — clientes compactos para listas grandes */
+@media(max-width:760px){
+  .stats,.stat-grid,.kpi-grid{gap:8px!important}
+  .stats .card,.stat-grid .card,.kpi-grid .card{padding:14px!important}
+  #clientsList,.clients-list,.company-list{display:grid!important;gap:10px!important}
+  #clientsList>*,.clients-list>*,.company-list>*{padding:14px!important;margin:0!important}
+  #clientsList h3,.clients-list h3,.company-list h3{margin:0 0 4px!important;font-size:18px!important}
+  #clientsList p,.clients-list p,.company-list p{margin:3px 0!important;line-height:1.3!important}
+  #clientsList button,.clients-list button,.company-list button,
+  #clientsList .btn,.clients-list .btn,.company-list .btn{min-height:38px!important;padding:7px 11px!important;font-size:14px!important}
+  details{margin-top:6px!important}
+}
 </style></head><body>
 <header class="topbar"><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>MASTER 7.4</small></div><div class="top-actions"><span class="badge">Administrador Master</span><a class="btn ghost" href="index.html">Painel empresa</a><button id="masterLogout" class="btn ghost">Sair</button></div></header>
 <main class="master-wrap"><div class="master-head"><div><h1>Painel Master</h1><p class="muted">Clientes e empresas da Vitrine Digital.</p></div><button id="newClientBtn" class="btn">+ Novo cliente</button></div><div class="master-grid"><div class="master-card"><span>Empresas</span><strong id="mCompanies">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Ativas</span><strong id="mActive">0</strong><small class="muted">em operação</small></div><div class="master-card"><span>Usuários</span><strong id="mMembers">0</strong><small class="muted">acessos</small></div><div class="master-card"><span>Telas</span><strong id="mScreens">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Online</span><strong id="mOnline">0</strong><small class="muted">com comunicação recente</small></div><div class="master-card"><span>Offline</span><strong id="mOffline">0</strong><small class="muted">sem comunicação recente</small></div></div><div class="card"><div class="section-head"><div><h2>Clientes</h2><p class="muted">Gerencie empresas e acompanhe suas telas. <span id="masterUpdated"></span></p></div><button id="refreshMaster" class="btn ghost">Atualizar</button></div><div id="clientList"></div></div></main>
