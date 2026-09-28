@@ -354,6 +354,8 @@ async function addPlaylistItem(pid){
   const original=b.innerHTML;b.disabled=true;b.textContent='Adicionando…';
   try{
    let rows=db?await load('playlist_items'):(demo.playlist_items||[]);
+   const alreadySaved=rows.find(i=>String(i.playlist_id)===playlistId&&String(i.media_id)===mediaId);
+   if(alreadySaved){alert('Este conteúdo já está nesta playlist.');return}
    const n=rows.filter(i=>String(i.playlist_id)===playlistId).length;
    const saved=await insert('playlist_items',{playlist_id:playlistId,media_id:mediaId,sort_order:n});
    if(!saved||!saved.id)throw new Error('O servidor não confirmou o vínculo do conteúdo com a playlist.');
@@ -368,7 +370,9 @@ async function addPlaylistItem(pid){
   }catch(err){
    console.error('playlist item save',err);
    const msg=String(err?.message||err||'Erro desconhecido');
-   if(/row-level security|RLS/i.test(msg))alert('O Supabase bloqueou a inclusão do item pela política RLS da tabela playlist_items. É necessário liberar INSERT/SELECT para o usuário autenticado nessa tabela.');
+   const code=String(err?.code||'');
+   if(code==='23505'||/duplicate key|playlist_items_playlist_id_media_id_key/i.test(msg))alert('Este conteúdo já está nesta playlist.');
+   else if(/row-level security|RLS/i.test(msg))alert('O Supabase bloqueou a inclusão do item pela política RLS da tabela playlist_items. É necessário liberar INSERT/SELECT para o usuário autenticado nessa tabela.');
    else if(/column.*sort_order|sort_order.*schema cache/i.test(msg))alert('A tabela playlist_items não possui a coluna sort_order esperada pelo sistema. É necessário corrigir o schema do Supabase.');
    else alert('Erro ao adicionar conteúdo à playlist: '+msg);
   }finally{b.disabled=false;b.innerHTML=original}
