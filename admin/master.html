@@ -28,24 +28,16 @@
   details{margin-top:6px!important}
 }
 </style><style>
-/* Master 7.7.1 — resumo compacto + ações sob demanda */
-.client-manage{margin-top:10px}
-.client-manage>summary{cursor:pointer;color:#55c8ff;font-weight:700;list-style:none}
-.client-manage>summary::-webkit-details-marker{display:none}
-.client-manage>summary::before{content:"▸ ";display:inline-block;transition:.15s}
-.client-manage[open]>summary::before{content:"▾ "}
-.client-manage-body{margin-top:10px;padding-top:10px;border-top:1px solid #24415d}
-@media(max-width:760px){
- .client-row{padding:14px!important;gap:8px!important}
- .client-main>strong{font-size:18px!important}
- .client-screen-stats{margin-top:7px!important}
- .client-last{margin-top:5px!important}
- .client-manage-body .plan-btn{margin-bottom:8px!important}
- .client-manage-body .client-status{margin-top:8px!important}
- .master-actions{display:flex!important;gap:8px!important;flex-wrap:wrap!important}
-}
+/* Master 7.8 — busca e filtros locais, sem consultas por tecla */
+.master-client-tools{display:grid;grid-template-columns:1fr 190px;gap:10px;margin:14px 0 18px}
+.master-client-tools input,.master-client-tools select{width:100%;min-height:44px;border:1px solid #284863;border-radius:12px;background:#071827;color:#eaf4ff;padding:10px 12px;font:inherit}
+@media(max-width:760px){.master-client-tools{grid-template-columns:1fr}.master-client-tools input,.master-client-tools select{min-height:48px}}
 </style></head><body>
 <header class="topbar"><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>MASTER 7.4</small></div><div class="top-actions"><span class="badge">Administrador Master</span><a class="btn ghost" href="index.html">Painel empresa</a><button id="masterLogout" class="btn ghost">Sair</button></div></header>
-<main class="master-wrap"><div class="master-head"><div><h1>Painel Master</h1><p class="muted">Clientes e empresas da Vitrine Digital.</p></div><button id="newClientBtn" class="btn">+ Novo cliente</button></div><div class="master-grid"><div class="master-card"><span>Empresas</span><strong id="mCompanies">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Ativas</span><strong id="mActive">0</strong><small class="muted">em operação</small></div><div class="master-card"><span>Usuários</span><strong id="mMembers">0</strong><small class="muted">acessos</small></div><div class="master-card"><span>Telas</span><strong id="mScreens">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Online</span><strong id="mOnline">0</strong><small class="muted">com comunicação recente</small></div><div class="master-card"><span>Offline</span><strong id="mOffline">0</strong><small class="muted">sem comunicação recente</small></div></div><div class="card"><div class="section-head"><div><h2>Clientes</h2><p class="muted">Gerencie empresas e acompanhe suas telas. <span id="masterUpdated"></span></p></div><button id="refreshMaster" class="btn ghost">Atualizar</button></div><div id="clientList"></div></div></main>
+<main class="master-wrap"><div class="master-head"><div><h1>Painel Master</h1><p class="muted">Clientes e empresas da Vitrine Digital.</p></div><button id="newClientBtn" class="btn">+ Novo cliente</button></div><div class="master-grid"><div class="master-card"><span>Empresas</span><strong id="mCompanies">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Ativas</span><strong id="mActive">0</strong><small class="muted">em operação</small></div><div class="master-card"><span>Usuários</span><strong id="mMembers">0</strong><small class="muted">acessos</small></div><div class="master-card"><span>Telas</span><strong id="mScreens">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Online</span><strong id="mOnline">0</strong><small class="muted">com comunicação recente</small></div><div class="master-card"><span>Offline</span><strong id="mOffline">0</strong><small class="muted">sem comunicação recente</small></div></div><div class="card"><div class="section-head"><div><h2>Clientes</h2><p class="muted">Gerencie empresas e acompanhe suas telas. <span id="masterUpdated"></span></p></div><button id="refreshMaster" class="btn ghost">Atualizar</button></div><div class="master-client-tools">
+<input id="masterClientSearch" type="search" placeholder="Buscar cliente, empresa ou plano…" autocomplete="off">
+<select id="masterClientFilter" aria-label="Filtrar clientes">
+<option value="all">Todos</option><option value="active">Ativos</option><option value="inactive">Inativos</option><option value="offline">Com tela offline</option>
+</select></div><div id="clientList"></div></div></main>
 <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h2>Novo cliente</h2><form id="newClientForm" class="master-form"><label>Nome da empresa<input name="name" required placeholder="Ex.: Mercado Central"></label><label>E-mail do proprietário<input name="email" type="email" required placeholder="cliente@email.com"></label><label>Senha temporária<input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label><p class="muted">Cria a empresa e o acesso do proprietário.</p><button class="btn" type="submit">Criar empresa e acesso</button><div id="masterMsg" class="muted"></div></form></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=7.5"></script></body></html>
