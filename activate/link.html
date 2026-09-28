@@ -1,1 +1,26 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ativar tela</title><style>body{margin:0;background:#061525;color:#eef7ff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.c{width:min(520px,88vw);padding:30px;border:1px solid #244866;border-radius:22px;background:#0b2033}input,button{box-sizing:border-box;width:100%;padding:15px;margin-top:12px;border-radius:12px;font-size:18px}button{border:0;background:#28bdf3;font-weight:800}.m{color:#9db1c4}.e{color:#ff9999}</style></head><body><div class="c"><h1>Vitrine Digital</h1><div id="b"><p>Conectar esta tela</p><p class="m">Escolha um nome para identificar a TV ou totem.</p><input id="n" maxlength="80" placeholder="Ex.: TV Recepção"><button id="g">Conectar tela</button></div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script>const b=document.querySelector("#b"),t=new URLSearchParams(location.search).get("token"),c=window.VD_CONFIG||window.CONFIG||{},db=supabase.createClient(c.supabaseUrl||c.SUPABASE_URL,c.supabaseAnonKey||c.SUPABASE_ANON_KEY);if(!t)b.innerHTML='<p class="e">Link inválido.</p>';document.querySelector("#g")?.addEventListener("click",async()=>{const g=document.querySelector("#g");g.disabled=true;g.textContent="Conectando…";const {data,error}=await db.functions.invoke("activate-screen-link",{body:{token:t,name:document.querySelector("#n").value.trim()||"Nova tela"}});if(error||data?.error){b.innerHTML='<p class="e">'+(data?.error||error?.message||"Falha na ativação.")+"</p>";return}localStorage.setItem("vd_screen_id",data.screen.id);b.innerHTML='<h2>✓ Tela conectada</h2><p class="m">Abrindo o Player…</p>';setTimeout(()=>location.replace("../player/index.html?screen_id="+encodeURIComponent(data.screen.id)),800)});</script></body></html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ativar tela</title>
+<style>body{margin:0;background:#061525;color:#eef7ff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.c{width:min(520px,88vw);padding:30px;border:1px solid #244866;border-radius:22px;background:#0b2033}input,button{box-sizing:border-box;width:100%;padding:15px;margin-top:12px;border-radius:12px;font-size:18px}button{border:0;background:#28bdf3;font-weight:800;cursor:pointer}button:disabled{opacity:.65}.m{color:#9db1c4}.e{color:#ff9999}</style></head>
+<body><div class="c"><h1>Vitrine Digital</h1><div id="b"><p>Conectar esta tela</p><p class="m">Escolha um nome para identificar a TV ou totem.</p><input id="n" maxlength="80" placeholder="Ex.: TV Recepção"><button id="g" type="button">Conectar tela</button><p id="msg"></p></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script>
+<script>
+(function(){
+ const token=new URLSearchParams(location.search).get("token"),btn=document.getElementById("g"),msg=document.getElementById("msg");
+ function fail(m){msg.className="e";msg.textContent=m;btn.disabled=false;btn.textContent="Conectar tela"}
+ if(!token){fail("Link de ativação inválido.");return}
+ const cfg=window.SUPABASE_CONFIG;
+ if(!cfg||!cfg.url||!cfg.key){fail("Configuração do sistema não carregou.");return}
+ const client=window.supabase.createClient(cfg.url,cfg.key);
+ btn.addEventListener("click",async function(){
+   btn.disabled=true;btn.textContent="Conectando…";msg.textContent="";
+   try{
+     const name=(document.getElementById("n").value||"").trim()||"Nova tela";
+     const {data,error}=await client.functions.invoke("activate-screen-link",{body:{token:token,name:name}});
+     if(error||data?.error)throw new Error(data?.error||error?.message||"Não foi possível ativar.");
+     localStorage.setItem("vd_screen_id",data.screen.id);
+     localStorage.setItem("vd_screen_code",data.screen.code);
+     document.getElementById("b").innerHTML='<h2>✓ Tela conectada</h2><p class="m">Abrindo o Player…</p>';
+     setTimeout(()=>location.replace("../player/index.html?screen_id="+encodeURIComponent(data.screen.id)),900);
+   }catch(e){fail(e.message||"Não foi possível ativar esta tela.")}
+ });
+})();
+</script></body></html>
