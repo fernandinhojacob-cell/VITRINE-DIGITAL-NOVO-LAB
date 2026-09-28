@@ -1,5 +1,5 @@
 (function(){'use strict';
-const PLAYER_VERSION='4.32.2-HEARTBEAT-FINAL';
+const PLAYER_VERSION='4.32.3-LOW-EGRESS';
 const cfg=window.SUPABASE_CONFIG||{}, hasConfig=!!(cfg.url&&cfg.key&&!String(cfg.url).includes('SEU-PROJETO'));
 const root=document.getElementById('playerRoot'),stage=document.getElementById('stage'),status=document.getElementById('status'),empty=document.getElementById('empty'),emptyMessage=document.getElementById('emptyMessage'),startBtn=document.getElementById('startBtn'),fullscreenBtn=document.getElementById('fullscreenBtn');
 const p=new URLSearchParams(location.search), code=(p.get('code')||localStorage.getItem('vitrine_screen_code')||'TV-0001').trim(); localStorage.setItem('vitrine_screen_code',code);
@@ -18,7 +18,34 @@ const REMOTE_MEDIA_DB='vitrine_remote_media_v1',REMOTE_MEDIA_STORE='files';
 function remoteMediaDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(REMOTE_MEDIA_DB,1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(REMOTE_MEDIA_STORE))d.createObjectStore(REMOTE_MEDIA_STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
 async function idbGetRemote(url){try{const d=await remoteMediaDb();const v=await new Promise((resolve,reject)=>{const r=d.transaction(REMOTE_MEDIA_STORE,'readonly').objectStore(REMOTE_MEDIA_STORE).get(url);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});d.close();return v||null}catch(e){return null}}
 async function idbPutRemote(url,blob){try{const d=await remoteMediaDb();await new Promise((resolve,reject)=>{const r=d.transaction(REMOTE_MEDIA_STORE,'readwrite').objectStore(REMOTE_MEDIA_STORE).put(blob,url);r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)});d.close();return true}catch(e){return false}}
-async function cachedUrl(url){if(!url)return url;try{const saved=await idbGetRemote(url);if(saved)return URL.createObjectURL(saved);const cache=await caches.open('vitrine-media-v432');let res=await cache.match(url);if(!res){res=await fetch(url,{mode:'cors',cache:'force-cache'});if(res.ok)await cache.put(url,res.clone())}if(res&&res.ok){const blob=await res.blob();await idbPutRemote(url,blob);return URL.createObjectURL(blob)}}catch(e){console.warn('media cache',e)}return url}
+// 4.32.3 LOW-EGRESS: reutiliza a mesma URL local durante toda a sessão e
+// deduplica downloads simultâneos. IndexedDB continua sendo a fonte persistente.
+const remoteUrlMemo=new Map(),remoteFetches=new Map();
+async function cachedUrl(url){
+ if(!url)return url;
+ if(remoteUrlMemo.has(url))return remoteUrlMemo.get(url);
+ if(remoteFetches.has(url))return remoteFetches.get(url);
+ const job=(async()=>{
+  try{
+   const saved=await idbGetRemote(url);
+   if(saved){const local=URL.createObjectURL(saved);remoteUrlMemo.set(url,local);return local}
+   const cache=await caches.open('vitrine-media-v432');
+   let res=await cache.match(url);
+   if(!res){
+    res=await fetch(url,{mode:'cors',cache:'force-cache'});
+    if(res.ok)await cache.put(url,res.clone());
+   }
+   if(res&&res.ok){
+    const blob=await res.blob();
+    await idbPutRemote(url,blob);
+    const local=URL.createObjectURL(blob);remoteUrlMemo.set(url,local);return local;
+   }
+  }catch(e){console.warn('media cache',e)}
+  return url;
+ })();
+ remoteFetches.set(url,job);
+ try{return await job}finally{remoteFetches.delete(url)}
+}
 async function prepareItems(rows){const normalized=normalize(rows);for(const x of normalized){if(String(x.url||'').startsWith('idb://'))x.playUrl=await localMediaUrl(x.url);else x.playUrl=x.url&&/^https?:/i.test(x.url)?await cachedUrl(x.url):x.url}return normalized.filter(x=>x.type==='text'||x.playUrl||x.url)}
 async function finishProof(){if(!db||!currentProof)return;try{await db.from('proof_of_play').update({ended_at:new Date().toISOString(),duration_seconds:Math.max(0,Math.round((Date.now()-currentProof.started)/1000))}).eq('id',currentProof.id)}catch(e){}currentProof=null}
 async function beginProof(x){await finishProof();if(!db||!screen||!x?.id)return;try{const {data}=await db.from('proof_of_play').insert({screen_id:screen.id,media_id:x.id,playlist_id:activePlaylistId,started_at:new Date().toISOString(),status:'played'}).select('id').maybeSingle();if(data?.id)currentProof={id:data.id,started:Date.now()}}catch(e){}}
