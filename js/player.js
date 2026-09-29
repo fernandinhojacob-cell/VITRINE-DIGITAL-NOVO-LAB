@@ -1,5 +1,5 @@
 (function(){'use strict';
-const PLAYER_VERSION='4.32.6-TIZEN-STRICT-LOCAL';
+const PLAYER_VERSION='4.32.8-EGRESS-CIRCUIT-BREAKER';
 const cfg=window.SUPABASE_CONFIG||{}, hasConfig=!!(cfg.url&&cfg.key&&!String(cfg.url).includes('SEU-PROJETO'));
 const root=document.getElementById('playerRoot'),stage=document.getElementById('stage'),status=document.getElementById('status'),empty=document.getElementById('empty'),emptyMessage=document.getElementById('emptyMessage'),startBtn=document.getElementById('startBtn'),fullscreenBtn=document.getElementById('fullscreenBtn');
 const p=new URLSearchParams(location.search), code=(p.get('code')||localStorage.getItem('vitrine_screen_code')||'TV-0001').trim(); localStorage.setItem('vitrine_screen_code',code);
@@ -21,6 +21,19 @@ async function idbPutRemote(url,blob){try{const d=await remoteMediaDb();await ne
 // 4.32.3 LOW-EGRESS: reutiliza a mesma URL local durante toda a sessão e
 // deduplica downloads simultâneos. IndexedDB continua sendo a fonte persistente.
 const remoteUrlMemo=new Map(),remoteFetches=new Map();
+// 4.32.8 EGRESS CIRCUIT BREAKER: proteção persistente contra loops de download.
+// No máximo 2 tentativas remotas da mesma mídia em 30 min por tela/navegador.
+// Conteúdo já salvo em IndexedDB não consome tentativa e continua reproduzindo normalmente.
+const EGRESS_GUARD_WINDOW=30*60*1000,EGRESS_GUARD_MAX=2;
+function egressGuardKey(url){let h=0,s=String(url||'');for(let i=0;i<s.length;i++)h=((h<<5)-h+s.charCodeAt(i))|0;return 'vd_egress_guard_'+code+'_'+Math.abs(h)}
+function egressGuardRead(url){try{return JSON.parse(localStorage.getItem(egressGuardKey(url))||'[]').filter(t=>Date.now()-Number(t)<EGRESS_GUARD_WINDOW)}catch(e){return []}}
+function egressGuardAllow(url){const a=egressGuardRead(url);if(a.length>=EGRESS_GUARD_MAX)return false;a.push(Date.now());try{localStorage.setItem(egressGuardKey(url),JSON.stringify(a))}catch(e){}return true}
+// Diagnóstico leve: registra somente decisões de cache/download, nunca cada reprodução.
+// Assim detectamos telas que voltam a baixar a mesma mídia sem aumentar egress de forma relevante.
+async function cacheDiag(eventType,url,extra={}){
+ if(!db||!screen?.id)return;
+ try{await db.from('player_cache_diagnostics').insert({screen_id:screen.id,event_type:eventType,media_url:String(url||'').slice(-500),bytes:Number(extra.bytes||0)||null,http_status:Number(extra.status||0)||null,player_version:PLAYER_VERSION,platform})}catch(e){}
+}
 async function cachedUrl(url){
  if(!url)return url;
  if(remoteUrlMemo.has(url))return remoteUrlMemo.get(url);
@@ -28,17 +41,26 @@ async function cachedUrl(url){
  const job=(async()=>{
   try{
    const saved=await idbGetRemote(url);
-   if(saved&&saved.size){const local=URL.createObjectURL(saved);remoteUrlMemo.set(url,local);return local}
+   if(saved&&saved.size){cacheDiag('cache_hit',url,{bytes:saved.size});const local=URL.createObjectURL(saved);remoteUrlMemo.set(url,local);return local}
+
+   // Barreira de segurança antes de QUALQUER novo acesso remoto à mídia.
+   // Se o navegador entrar em loop, a terceira tentativa em 30 min é bloqueada localmente.
+   if(!egressGuardAllow(url)){
+    cacheDiag('circuit_block',url);
+    console.error('EGRESS GUARD: download remoto bloqueado',url);
+    return '';
+   }
 
    // Samsung/Tizen: nunca entrega a URL remota diretamente ao <video>.
    // O navegador da TV faz milhares de Range requests sobre .mov quando recebe
    // a URL do Storage. Baixamos o arquivo inteiro uma vez e reproduzimos Blob local.
    if(isSamsungTizen){
     const res=await fetch(url,{mode:'cors',cache:'no-store'});
-    if(!res.ok)throw new Error('download Tizen HTTP '+res.status);
+    if(!res.ok){cacheDiag('download_error',url,{status:res.status});throw new Error('download Tizen HTTP '+res.status);}
     const blob=await res.blob();
     if(!blob||!blob.size)throw new Error('download Tizen vazio');
     await idbPutRemote(url,blob); // persistência é desejável, mas não bloqueia a sessão
+    cacheDiag('download_success',url,{bytes:blob.size,status:res.status});
     const local=URL.createObjectURL(blob);
     remoteUrlMemo.set(url,local);
     return local;
@@ -53,12 +75,15 @@ async function cachedUrl(url){
    if(res&&res.ok){
     const blob=await res.blob();
     await idbPutRemote(url,blob);
+    cacheDiag('download_success',url,{bytes:blob.size,status:res.status});
     const local=URL.createObjectURL(blob);remoteUrlMemo.set(url,local);return local;
    }
   }catch(e){console.warn('media cache',e)}
-  // Falha fechada no Tizen: não voltar para URL remota de vídeo, pois isso
-  // reativa Range requests massivos. Outros navegadores mantêm fallback legado.
-  return isSamsungTizen?'':url;
+  // Falha fechada em todas as plataformas: nunca entregar URL remota direta
+  // ao elemento de mídia depois de uma falha de cache/download. Isso impede loops
+  // de Range requests em navegadores de TV e protege o egress.
+  cacheDiag('remote_fallback',url);
+  return '';
  })();
  remoteFetches.set(url,job);
  try{return await job}finally{remoteFetches.delete(url)}
