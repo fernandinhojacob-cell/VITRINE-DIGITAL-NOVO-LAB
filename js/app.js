@@ -291,7 +291,9 @@ function openMedia(id){
     else {const localId='media-'+uid();await putLocalMedia(localId,file);url='idb://'+localId;sessionOnly=false;}
    }
    if(!url&&f.get('type')!=='text')throw new Error('Selecione um arquivo ou informe uma URL.');
-   const row={name:String(f.get('name')||'').trim(),type:f.get('type'),file_url:url||null,text_content:f.get('text_content')||null,duration:Number(f.get('duration')||10),active:true,local_session_only:sessionOnly};
+   const row={name:String(f.get('name')||'').trim(),type:f.get('type'),file_url:url||null,
+          size_bytes: file.size,
+          mime_type: file.type || null,text_content:f.get('text_content')||null,duration:Number(f.get('duration')||10),active:true,local_session_only:sessionOnly};
    if(!row.name)throw new Error('Informe o nome do conteúdo.');
    if(existing)await update('media',existing,row);else await insert('media',row);
    closeModal();await render();
