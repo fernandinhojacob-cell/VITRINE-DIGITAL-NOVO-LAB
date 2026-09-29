@@ -168,3 +168,31 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
 })();
 
 ;(()=>{document.addEventListener("click",e=>{const b=e.target.closest("[data-report-open]");if(!b)return;const d=b.closest("[data-report-card]")?.querySelector(".vd-report-details"),open=d?.hidden;document.querySelectorAll("#reportsList .vd-report-details").forEach(x=>x.hidden=true);document.querySelectorAll("#reportsList [data-report-open]").forEach(x=>x.textContent="Abrir");if(d&&open){d.hidden=false;b.textContent="Fechar"}},true)})();
+
+
+;(()=>{
+ const st=document.createElement("style");
+ st.id="vd-client-options-floating-939";
+ st.textContent=`
+ .vd-client-card{position:relative}
+ .vd-client-top-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+ .vd-client-options-menu{
+   position:absolute;right:18px;top:88px;z-index:60;
+   width:min(290px,calc(100% - 36px));
+   padding:10px;border:1px solid #244864;border-radius:16px;
+   background:#0b1d2f;box-shadow:0 14px 34px rgba(0,0,0,.38);
+ }
+ .vd-client-options-menu[hidden]{display:none!important}
+ .vd-client-options-menu .btn{display:block;width:100%;margin:0 0 8px;text-align:left}
+ .vd-client-options-menu .btn:last-child{margin-bottom:0}
+ @media(max-width:600px){
+   .vd-client-options-menu{right:12px;top:92px;width:min(285px,calc(100% - 24px))}
+ }
+ `;
+ document.head.appendChild(st);
+ document.addEventListener("click",e=>{
+   if(e.target.closest("[data-client-options]")||e.target.closest("[data-client-options-menu]"))return;
+   document.querySelectorAll("[data-client-options-menu]").forEach(m=>m.hidden=true);
+   document.querySelectorAll("[data-client-options]").forEach(b=>b.setAttribute("aria-expanded","false"));
+ },true);
+})();
