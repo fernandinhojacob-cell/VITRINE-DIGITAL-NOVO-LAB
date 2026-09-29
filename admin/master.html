@@ -385,4 +385,18 @@ html,body{max-width:100%;overflow-x:hidden}
 #reportsList .vd931-details[hidden]{display:none!important}
 </style>
 
+<script id="vd-master-menu-outside-935">
+document.addEventListener("click",function(e){
+ const drawer=document.querySelector(".master-drawer");
+ if(!drawer||drawer.contains(e.target))return;
+ const r=drawer.getBoundingClientRect();
+ if(r.width<10)return;
+ const toggle=e.target.closest(".master-menu-btn,.menu-toggle,[data-master-menu]");
+ if(toggle)return;
+ const close=document.querySelector("[data-master-menu-close],.master-drawer-close,.menu-close");
+ if(close){close.click();return}
+ drawer.classList.remove("open","active","show");
+ document.body.classList.remove("master-menu-open","menu-open","drawer-open");
+},true);
+</script>
 </body></html>
