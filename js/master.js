@@ -133,6 +133,25 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
   [["uMedia",A.length],["uStorage",fmt(b)],["uScreens",S.length],["uAvg",`${S.filter(s=>s.online===true).length} de ${S.length}`]].forEach(([id,v])=>{let e=document.getElementById(id);if(e)e.textContent=v});
  }
  window.addEventListener("load",()=>fill().catch(()=>{}),{once:true});
+ async function fillCacheDiagnostics(){
+  const alertEl=document.getElementById("uCacheAlerts"),statusEl=document.getElementById("uCacheStatus"),badge=document.getElementById("uCacheBadge"),detail=document.getElementById("uCacheDetail");
+  if(!alertEl||!statusEl)return;
+  const since=new Date(Date.now()-3600000).toISOString();
+  const {data,error}=await db.from("player_cache_diagnostics").select("screen_id,event_type,media_url,created_at").gte("created_at",since).order("created_at",{ascending:false}).limit(1000);
+  if(error){statusEl.textContent="Diagnóstico de cache indisponível.";if(badge){badge.textContent="⚪ Indisponível";badge.style.background="#334155";}return}
+  const rows=data||[],groups=new Map();
+  rows.filter(x=>x.event_type==="download_success").forEach(x=>{const k=x.screen_id+"|"+x.media_url;groups.set(k,(groups.get(k)||0)+1)});
+  const repeated=[...groups.values()].filter(n=>n>1).length,fallbacks=rows.filter(x=>x.event_type==="remote_fallback").length,errors=rows.filter(x=>x.event_type==="download_error").length,blocks=rows.filter(x=>x.event_type==="circuit_block").length;
+  const alerts=repeated+fallbacks+errors+blocks;alertEl.textContent=String(alerts);
+  const ids=[...new Set(rows.filter(x=>["remote_fallback","download_error","circuit_block"].includes(x.event_type)).map(x=>x.screen_id).filter(Boolean))];
+  let names=[];if(ids.length){const {data:ss}=await db.from("screens").select("id,name,code").in("id",ids);names=(ss||[]).map(x=>x.name||x.code).filter(Boolean)}
+  if(blocks){if(badge){badge.textContent="🔴 BLOQUEADO";badge.style.background="#7f1d1d";badge.style.borderColor="#ef4444"}statusEl.textContent=`Proteção acionada: ${blocks} bloqueio(s) automático(s) na última hora.`}
+  else if(alerts){if(badge){badge.textContent="🟡 ATENÇÃO";badge.style.background="#713f12";badge.style.borderColor="#f59e0b"}statusEl.textContent=`Atenção: ${repeated} repetição(ões), ${fallbacks} fallback(s) e ${errors} erro(s) na última hora.`}
+  else{if(badge){badge.textContent="🟢 NORMAL";badge.style.background="#14532d";badge.style.borderColor="#22c55e"}statusEl.textContent="Cache saudável: nenhum download repetido, fallback remoto ou bloqueio detectado na última hora."}
+  if(detail)detail.textContent=names.length?`Tela(s) envolvida(s): ${names.join(", ")}`:"Nenhuma tela com alerta na última hora.";
+ }
+ window.addEventListener("load",()=>fillCacheDiagnostics().catch(()=>{}),{once:true});
+ setInterval(()=>fillCacheDiagnostics().catch(()=>{}),60000);
 })();
 
 
