@@ -1,5 +1,5 @@
 (function(){'use strict';
-const PLAYER_VERSION='4.32.4-SUBSCRIPTION-GATE';
+const PLAYER_VERSION='4.32.5-TIZEN-LOCAL-VIDEO';
 const cfg=window.SUPABASE_CONFIG||{}, hasConfig=!!(cfg.url&&cfg.key&&!String(cfg.url).includes('SEU-PROJETO'));
 const root=document.getElementById('playerRoot'),stage=document.getElementById('stage'),status=document.getElementById('status'),empty=document.getElementById('empty'),emptyMessage=document.getElementById('emptyMessage'),startBtn=document.getElementById('startBtn'),fullscreenBtn=document.getElementById('fullscreenBtn');
 const p=new URLSearchParams(location.search), code=(p.get('code')||localStorage.getItem('vitrine_screen_code')||'TV-0001').trim(); localStorage.setItem('vitrine_screen_code',code);
@@ -28,12 +28,27 @@ async function cachedUrl(url){
  const job=(async()=>{
   try{
    const saved=await idbGetRemote(url);
-   if(saved){const local=URL.createObjectURL(saved);remoteUrlMemo.set(url,local);return local}
-   const cache=await caches.open('vitrine-media-v432');
-   let res=await cache.match(url);
+   if(saved&&saved.size){const local=URL.createObjectURL(saved);remoteUrlMemo.set(url,local);return local}
+
+   // Samsung/Tizen: nunca entrega a URL remota diretamente ao <video>.
+   // O navegador da TV faz milhares de Range requests sobre .mov quando recebe
+   // a URL do Storage. Baixamos o arquivo inteiro uma vez e reproduzimos Blob local.
+   if(isSamsungTizen){
+    const res=await fetch(url,{mode:'cors',cache:'no-store',headers:{Range:'bytes=0-'}});
+    if(!res.ok)throw new Error('download Tizen HTTP '+res.status);
+    const blob=await res.blob();
+    if(!blob||!blob.size)throw new Error('download Tizen vazio');
+    await idbPutRemote(url,blob); // persistência é desejável, mas não bloqueia a sessão
+    const local=URL.createObjectURL(blob);
+    remoteUrlMemo.set(url,local);
+    return local;
+   }
+
+   let cache=null,res=null;
+   try{cache=await caches.open('vitrine-media-v432');res=await cache.match(url)}catch(e){console.warn('cache api read',e)}
    if(!res){
     res=await fetch(url,{mode:'cors',cache:'force-cache'});
-    if(res.ok)await cache.put(url,res.clone());
+    if(res.ok&&cache){try{await cache.put(url,res.clone())}catch(e){console.warn('cache api write',e)}}
    }
    if(res&&res.ok){
     const blob=await res.blob();
@@ -41,7 +56,9 @@ async function cachedUrl(url){
     const local=URL.createObjectURL(blob);remoteUrlMemo.set(url,local);return local;
    }
   }catch(e){console.warn('media cache',e)}
-  return url;
+  // Falha fechada no Tizen: não voltar para URL remota de vídeo, pois isso
+  // reativa Range requests massivos. Outros navegadores mantêm fallback legado.
+  return isSamsungTizen?'':url;
  })();
  remoteFetches.set(url,job);
  try{return await job}finally{remoteFetches.delete(url)}
