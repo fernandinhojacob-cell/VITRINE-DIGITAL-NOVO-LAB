@@ -302,4 +302,68 @@ html,body{max-width:100%;overflow-x:hidden}
 })();
 </script>
 
-<script>(function(){const body=document.body,side=document.getElementById("masterSide"),menu=document.getElementById("masterMenuBtn");function setRoute(r){body.dataset.masterRoute=r;document.querySelectorAll("[data-master-route]").forEach(b=>b.classList.toggle("active",b.dataset.masterRoute===r));side?.classList.remove("open");try{sessionStorage.setItem("vd_master_route",r)}catch(e){}window.scrollTo(0,0)}document.querySelectorAll("[data-master-route]").forEach(b=>b.onclick=()=>setRoute(b.dataset.masterRoute));menu?.addEventListener("click",()=>side?.classList.toggle("open"));let r="dashboard";try{r=sessionStorage.getItem("vd_master_route")||r}catch(e){}setRoute(r)})();</script></body></html>
+<script>(function(){const body=document.body,side=document.getElementById("masterSide"),menu=document.getElementById("masterMenuBtn");function setRoute(r){body.dataset.masterRoute=r;document.querySelectorAll("[data-master-route]").forEach(b=>b.classList.toggle("active",b.dataset.masterRoute===r));side?.classList.remove("open");try{sessionStorage.setItem("vd_master_route",r)}catch(e){}window.scrollTo(0,0)}document.querySelectorAll("[data-master-route]").forEach(b=>b.onclick=()=>setRoute(b.dataset.masterRoute));menu?.addEventListener("click",()=>side?.classList.toggle("open"));let r="dashboard";try{r=sessionStorage.getItem("vd_master_route")||r}catch(e){}setRoute(r)})();</script>
+<script id="vd-reports-931">
+(()=> {
+ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ let db=null;
+ function getDb(){
+   if(db)return db;
+   const cfg=window.SUPABASE_CONFIG||{};
+   if(window.supabase&&cfg.url&&cfg.key) db=window.supabase.createClient(cfg.url,cfg.key);
+   return db;
+ }
+ async function renderReports931(){
+   const host=document.getElementById("reportsList"), client=getDb();
+   if(!host||!client)return;
+   const [c,s,m,p]=await Promise.all([
+     client.from("companies").select("id,name,active"),
+     client.from("screens").select("id,company_id"),
+     client.from("media").select("id,company_id,active"),
+     client.from("playlists").select("id,company_id")
+   ]);
+   const C=c.data||[],S=s.data||[],M=m.data||[],P=p.data||[];
+   host.innerHTML=C.map(x=>{
+     const cs=S.filter(y=>y.company_id===x.id);
+     const cm=M.filter(y=>y.company_id===x.id&&y.active!==false);
+     const cp=P.filter(y=>y.company_id===x.id);
+     return `<div class="billing-row vd931-report" data-r931="${x.id}">
+       <div class="vd931-summary">
+         <div class="vd931-main"><div class="billing-name">${esc(x.name)}</div>
+         <div class="billing-plan">${cs.length} tela(s) · ${cm.length} conteúdo(s) · ${cp.length} playlist(s)</div></div>
+         <button class="btn ghost vd931-open" type="button">Abrir</button>
+       </div>
+       <div class="vd931-details" hidden>
+         <div><b>Telas cadastradas:</b> ${cs.length}</div>
+         <div><b>Conteúdos ativos:</b> ${cm.length}</div>
+         <div><b>Playlists:</b> ${cp.length}</div>
+         <div><b>Empresa:</b> ${x.active===false?"Inativa":"Ativa"}</div>
+       </div>
+     </div>`;
+   }).join("");
+ }
+ document.addEventListener("click",e=>{
+   const b=e.target.closest(".vd931-open");
+   if(b){
+     const card=b.closest(".vd931-report"),d=card.querySelector(".vd931-details"),open=d.hidden;
+     document.querySelectorAll(".vd931-details").forEach(x=>x.hidden=true);
+     document.querySelectorAll(".vd931-open").forEach(x=>x.textContent="Abrir");
+     if(open){d.hidden=false;b.textContent="Fechar"}
+     return;
+   }
+   const route=e.target.closest("[data-master-route]");
+   if(route?.dataset.masterRoute==="reports") setTimeout(()=>renderReports931().catch(()=>{}),250);
+ },true);
+ window.addEventListener("load",()=>setTimeout(()=>renderReports931().catch(()=>{}),700),{once:true});
+})();
+</script>
+<style id="vd-reports-931-css">
+#reportsList .vd931-report{display:block!important;width:100%;max-width:100%;box-sizing:border-box}
+#reportsList .vd931-summary{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#reportsList .vd931-main{min-width:0;flex:1 1 auto}
+#reportsList .vd931-open{flex:0 0 auto}
+#reportsList .vd931-details{margin-top:12px;padding-top:12px;border-top:1px solid #1c3d5b;line-height:1.8}
+#reportsList .vd931-details[hidden]{display:none!important}
+</style>
+
+</body></html>
