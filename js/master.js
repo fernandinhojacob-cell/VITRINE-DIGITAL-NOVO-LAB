@@ -120,3 +120,33 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
 })();
 
 
+
+;(()=> {
+ async function vd929OnlineKpi(){
+   const el=document.getElementById("uAvg");
+   if(!el || !window.supabaseClient) return;
+   try{
+     const {data:screens,error}=await window.supabaseClient
+       .from("screens").select("id,active");
+     if(error) return;
+     const ids=(screens||[]).filter(s=>s.active!==false).map(s=>s.id);
+     let online=0;
+     if(ids.length){
+       const {data:hb}=await window.supabaseClient
+         .from("screen_heartbeat").select("screen_id,last_seen_at").in("screen_id",ids);
+       const now=Date.now(), latest={};
+       (hb||[]).forEach(x=>{
+         const t=new Date(x.last_seen_at).getTime();
+         if(!latest[x.screen_id] || t>latest[x.screen_id]) latest[x.screen_id]=t;
+       });
+       online=ids.filter(id=>latest[id] && now-latest[id] <= 90000).length;
+     }
+     el.textContent=`${online} de ${ids.length}`;
+   }catch(_){}
+ }
+ window.addEventListener("load",()=>setTimeout(vd929OnlineKpi,900),{once:true});
+ document.addEventListener("click",e=>{
+   const t=(e.target.textContent||"").trim().toLowerCase();
+   if(t==="consumo") setTimeout(vd929OnlineKpi,500);
+ },true);
+})();
