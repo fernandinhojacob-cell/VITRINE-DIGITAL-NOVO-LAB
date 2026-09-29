@@ -196,3 +196,39 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
    document.querySelectorAll("[data-client-options]").forEach(b=>b.setAttribute("aria-expanded","false"));
  },true);
 })();
+
+
+;(()=>{
+ function placeMenu(btn,menu){
+   const r=btn.getBoundingClientRect();
+   const w=Math.min(290,window.innerWidth-24);
+   let left=Math.min(window.innerWidth-w-12,Math.max(12,r.right-w));
+   let top=r.bottom+6;
+   menu.style.position="fixed";
+   menu.style.width=w+"px";
+   menu.style.left=left+"px";
+   menu.style.right="auto";
+   menu.style.top=top+"px";
+   menu.style.zIndex="2147483647";
+   menu.style.overflow="visible";
+ }
+ document.addEventListener("click",e=>{
+   const btn=e.target.closest("[data-client-options]");
+   if(!btn)return;
+   const menu=document.querySelector(`[data-client-options-menu="${btn.dataset.clientOptions}"]`);
+   if(!menu)return;
+   setTimeout(()=>{if(!menu.hidden)placeMenu(btn,menu)},0);
+ },true);
+ window.addEventListener("resize",()=>{
+   const menu=[...document.querySelectorAll("[data-client-options-menu]")].find(m=>!m.hidden);
+   if(!menu)return;
+   const btn=document.querySelector(`[data-client-options="${menu.dataset.clientOptionsMenu}"]`);
+   if(btn)placeMenu(btn,menu);
+ });
+ window.addEventListener("scroll",()=>{
+   const menu=[...document.querySelectorAll("[data-client-options-menu]")].find(m=>!m.hidden);
+   if(!menu)return;
+   const btn=document.querySelector(`[data-client-options="${menu.dataset.clientOptionsMenu}"]`);
+   if(btn)placeMenu(btn,menu);
+ },true);
+})();
