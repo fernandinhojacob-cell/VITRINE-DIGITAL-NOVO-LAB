@@ -1,5 +1,5 @@
 (function(){'use strict';
-const PLAYER_VERSION='4.32.5-TIZEN-LOCAL-VIDEO';
+const PLAYER_VERSION='4.32.6-TIZEN-STRICT-LOCAL';
 const cfg=window.SUPABASE_CONFIG||{}, hasConfig=!!(cfg.url&&cfg.key&&!String(cfg.url).includes('SEU-PROJETO'));
 const root=document.getElementById('playerRoot'),stage=document.getElementById('stage'),status=document.getElementById('status'),empty=document.getElementById('empty'),emptyMessage=document.getElementById('emptyMessage'),startBtn=document.getElementById('startBtn'),fullscreenBtn=document.getElementById('fullscreenBtn');
 const p=new URLSearchParams(location.search), code=(p.get('code')||localStorage.getItem('vitrine_screen_code')||'TV-0001').trim(); localStorage.setItem('vitrine_screen_code',code);
@@ -34,7 +34,7 @@ async function cachedUrl(url){
    // O navegador da TV faz milhares de Range requests sobre .mov quando recebe
    // a URL do Storage. Baixamos o arquivo inteiro uma vez e reproduzimos Blob local.
    if(isSamsungTizen){
-    const res=await fetch(url,{mode:'cors',cache:'no-store',headers:{Range:'bytes=0-'}});
+    const res=await fetch(url,{mode:'cors',cache:'no-store'});
     if(!res.ok)throw new Error('download Tizen HTTP '+res.status);
     const blob=await res.blob();
     if(!blob||!blob.size)throw new Error('download Tizen vazio');
@@ -63,12 +63,12 @@ async function cachedUrl(url){
  remoteFetches.set(url,job);
  try{return await job}finally{remoteFetches.delete(url)}
 }
-async function prepareItems(rows){const normalized=normalize(rows);for(const x of normalized){if(String(x.url||'').startsWith('idb://'))x.playUrl=await localMediaUrl(x.url);else x.playUrl=x.url&&/^https?:/i.test(x.url)?await cachedUrl(x.url):x.url}return normalized.filter(x=>x.type==='text'||x.playUrl||x.url)}
+async function prepareItems(rows){const normalized=normalize(rows);for(const x of normalized){if(String(x.url||'').startsWith('idb://'))x.playUrl=await localMediaUrl(x.url);else x.playUrl=x.url&&/^https?:/i.test(x.url)?await cachedUrl(x.url):x.url}return normalized.filter(x=>x.type==='text'||x.playUrl||(!isSamsungTizen&&x.url))}
 async function finishProof(){if(!db||!currentProof)return;try{await db.from('proof_of_play').update({ended_at:new Date().toISOString(),duration_seconds:Math.max(0,Math.round((Date.now()-currentProof.started)/1000))}).eq('id',currentProof.id)}catch(e){}currentProof=null}
 async function beginProof(x){await finishProof();if(!db||!screen||!x?.id)return;try{const {data}=await db.from('proof_of_play').insert({screen_id:screen.id,media_id:x.id,playlist_id:activePlaylistId,started_at:new Date().toISOString(),status:'played'}).select('id').maybeSingle();if(data?.id)currentProof={id:data.id,started:Date.now()}}catch(e){}}
 function syncPosition(){if(!activeSyncGroup||!items.length)return null;const durations=items.map(x=>Math.max(2,Number(x.duration||8))),total=durations.reduce((a,b)=>a+b,0);if(!total)return null;let pos=(Date.now()/1000)%total;for(let i=0;i<durations.length;i++){if(pos<durations[i])return {index:i,offset:pos,remaining:Math.max(.25,durations[i]-pos)};pos-=durations[i]}return {index:0,offset:0,remaining:durations[0]}}
 function playNext(){if(blackout||subscriptionBlocked){clearStage();if(subscriptionBlocked)showEmpty('Assinatura suspensa. Regularize o pagamento para retomar a programação.');else hideEmpty();return}lastPlaybackActivity=Date.now();clearStage();if(!items.length){showEmpty('Nenhum conteúdo disponível para esta tela.');timer=setTimeout(playNext,5000);return}hideEmpty();const sp=syncPosition();if(sp)index=sp.index;const x=items[index%items.length];index=(index+1)%items.length;beginProof(x);const next=async()=>{await finishProof();playNext()};const syncedMs=sp?Math.max(250,sp.remaining*1000):null;
- if(x.type==='video'){const v=document.createElement('video');v.src=x.playUrl||x.url;v.autoplay=true;v.muted=true;v.playsInline=true;v.setAttribute('playsinline','');stage.appendChild(v);let done=false;const once=()=>{if(done)return;done=true;next()};v.onended=once;v.onerror=()=>setTimeout(once,1000);v.play().catch(()=>{startBtn.disabled=false;startBtn.textContent='Toque/OK para iniciar'});if(sp&&sp.offset>0)v.addEventListener('loadedmetadata',()=>{try{if(Number.isFinite(v.duration)&&v.duration>sp.offset)v.currentTime=sp.offset}catch(e){}},{once:true});timer=setTimeout(once,syncedMs||Math.max(5,x.duration||30)*1000)}
+ if(x.type==='video'){const v=document.createElement('video');const src=x.playUrl||(!isSamsungTizen?x.url:'');if(!src){timer=setTimeout(next,1000);return}v.src=src;v.autoplay=true;v.muted=true;v.playsInline=true;v.setAttribute('playsinline','');stage.appendChild(v);let done=false;const once=()=>{if(done)return;done=true;next()};v.onended=once;v.onerror=()=>setTimeout(once,1000);v.play().catch(()=>{startBtn.disabled=false;startBtn.textContent='Toque/OK para iniciar'});if(sp&&sp.offset>0)v.addEventListener('loadedmetadata',()=>{try{if(Number.isFinite(v.duration)&&v.duration>sp.offset)v.currentTime=sp.offset}catch(e){}},{once:true});timer=setTimeout(once,syncedMs||Math.max(5,x.duration||30)*1000)}
  else if(x.type==='image'){const img=document.createElement('img');img.src=x.playUrl||x.url;img.alt=x.text||'Conteúdo';stage.appendChild(img);timer=setTimeout(next,syncedMs||Math.max(2,x.duration||8)*1000)}
  else if(x.type==='web'){const f=document.createElement('iframe');f.src=x.playUrl||x.url;f.allow='autoplay; fullscreen';f.style.border='0';stage.appendChild(f);timer=setTimeout(next,syncedMs||Math.max(5,x.duration||15)*1000)}
  else{const d=document.createElement('div');d.className='slide-text';d.textContent=x.text||'Vitrine Digital';stage.appendChild(d);timer=setTimeout(next,syncedMs||Math.max(2,x.duration||8)*1000)}}
