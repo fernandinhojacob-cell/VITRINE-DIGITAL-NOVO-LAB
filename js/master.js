@@ -60,26 +60,36 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
 
 
 ;(()=> {
- const cfg=window.SUPABASE_CONFIG||{}, db=window.supabase?.createClient(cfg.url,cfg.key);
- if(!db)return;
- const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
- const fmtBytes=n=>{n=Number(n||0);if(!n)return "0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.floor(Math.log(n)/Math.log(1024)),3);return `${(n/1024**i).toLocaleString("pt-BR",{maximumFractionDigits:2})} ${u[i]}`};
- async function loadMasterExtras(){
-   const host=document.getElementById("reportsList");
-   const [cq,sq,mq,pq]=await Promise.all([
-     db.from("companies").select("id,name,active").order("name"),
-     db.from("screens").select("id,company_id,active"),
-     db.from("media").select("id,company_id,active,size_bytes"),
-     db.from("playlists").select("id,company_id")
-   ]);
-   const companies=cq.data||[], screens=sq.data||[], media=mq.data||[], playlists=pq.data||[];
-   if(host) host.innerHTML=companies.map(c=>{
-     const sc=screens.filter(x=>x.company_id===c.id).length, me=media.filter(x=>x.company_id===c.id&&x.active!==false).length, pl=playlists.filter(x=>x.company_id===c.id).length;
-     return `<div class="billing-row"><div class="billing-top"><div><div class="billing-name">${esc(c.name)}</div><div class="billing-plan">${sc} tela(s) · ${me} conteúdo(s) · ${pl} playlist(s)</div></div><span class="billing-status ${c.active?"active":"suspended"}">${c.active?"Ativa":"Inativa"}</span></div></div>`;
-   }).join("")||'<p class="muted">Nenhuma empresa cadastrada.</p>';
-   const activeMedia=media.filter(x=>x.active!==false), bytes=activeMedia.reduce((s,x)=>s+Number(x.size_bytes||0),0);
-   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-   set("uMedia",activeMedia.length); set("uStorage",fmtBytes(bytes)); set("uScreens",screens.length); set("uAvg",fmtBytes(screens.length?bytes/screens.length:0));
+ function compactClients(){
+   const host=document.getElementById("clientList"); if(!host)return;
+   const cards=[...host.children].filter(el=>el.nodeType===1);
+   cards.forEach(card=>{
+     if(card.querySelector(":scope > .vd-client-summary")) return;
+     card.classList.add("client-card");
+     const text=card.innerText||"";
+     const lines=text.split("\n").map(x=>x.trim()).filter(Boolean);
+     const name=(lines[0]||"Cliente").replace(/^(Ativa|Inativa)\s*/i,"").trim();
+     const screenMatch=text.match(/(\d+)\s+tela\(s\)/i);
+     const onlineMatch=text.match(/(\d+)\s+online/i);
+     const active=/\bAtiva\b/i.test(text)&&!/\bInativa\b/i.test(lines.slice(0,3).join(" "));
+     const summary=document.createElement("div");
+     summary.className="vd-client-summary";
+     summary.innerHTML=`<div class="vd-client-summary-main"><div class="vd-client-summary-name"></div><div class="vd-client-summary-meta"></div></div><button type="button" class="vd-client-open" aria-expanded="false"></button>`;
+     summary.querySelector(".vd-client-summary-name").textContent=name;
+     summary.querySelector(".vd-client-summary-meta").textContent=`${active?"Ativa":"Inativa"} · ${screenMatch?screenMatch[1]:"0"} tela(s) · ${onlineMatch?onlineMatch[1]:"0"} online`;
+     card.prepend(summary);
+   });
  }
- window.addEventListener("load",()=>loadMasterExtras().catch(()=>{}),{once:true});
+ function observe(){
+   const host=document.getElementById("clientList");if(!host)return;
+   compactClients();
+   new MutationObserver(()=>compactClients()).observe(host,{childList:true});
+   host.addEventListener("click",e=>{
+     const b=e.target.closest(".vd-client-open"); if(!b)return;
+     const card=b.closest(".client-card"), opening=!card.classList.contains("vd-open");
+     host.querySelectorAll(".client-card.vd-open").forEach(c=>{c.classList.remove("vd-open");const x=c.querySelector(".vd-client-open");if(x)x.setAttribute("aria-expanded","false")});
+     if(opening){card.classList.add("vd-open");b.setAttribute("aria-expanded","true")}
+   });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",observe);else observe();
 })();
