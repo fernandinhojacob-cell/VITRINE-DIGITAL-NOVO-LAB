@@ -50,9 +50,36 @@ const billable=(companies||[]).filter(c=>!c.billing_exempt), bActive=billable.fi
 const ba=$("#bActive"),bp=$("#bPastDue"),bs=$("#bSuspended"),bm=$("#bMRR"),bl=$("#billingList");
 if(ba)ba.textContent=bActive.length;if(bp)bp.textContent=bPast.length;if(bs)bs.textContent=bSusp.length;if(bm)bm.textContent=mrr.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
 const fmtDate=v=>v?new Date(v).toLocaleDateString("pt-BR"):"—";
-if(bl)bl.innerHTML=billable.map(c=>{let price=priceByName[c.plan_name];if(price==null&&Number(c.screen_limit||0)===1&&oneScreenPlan)price=Number(oneScreenPlan.monthly_price||0);const st=c.subscription_status||"active",label=st==="active"?"Ativa":st==="past_due"?"Em atraso":st==="suspended"?"Suspensa":st;return `<div class="billing-row"><div class="billing-top"><div><div class="billing-name">${esc(c.name)}</div><div class="billing-plan">${esc(c.plan_name||"Plano")} · ${Number(price||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}/mês</div></div><span class="billing-status ${esc(st)}">${esc(label)}</span></div><div class="billing-meta">Próximo vencimento: <b>${fmtDate(c.current_period_end)}</b> · Tolerância até: <b>${fmtDate(c.grace_until)}</b>${c.suspended_at?` · Suspensa em: <b>${fmtDate(c.suspended_at)}</b>`:""}</div></div>`}).join("")||'<p class="muted">Nenhuma assinatura faturável.</p>';$("#masterUpdated").textContent="Atualizado "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});$("#clientList").innerHTML=applyClientFilters().map(c=>{const ms=members.filter(m=>m.company_id===c.id&&m.active),cs=allScreens.filter(s=>s.company_id===c.id),on=cs.filter(isOnline),off=cs.filter(s=>!isOnline(s)),latest=cs.map(lastContact).filter(Boolean).sort((a,b)=>new Date(b)-new Date(a))[0];const screenRows=cs.length?cs.map(s=>`<div class="master-screen"><span class="screen-dot ${isOnline(s)?'online':'offline'}"></span><div><b>${esc(s.name||s.code||'Tela')}</b><small>Empresa: ${esc(c.name)} · Código: ${esc(s.code||'—')}</small><small>Status: <strong class="${isOnline(s)?'online-text':'offline-text'}">${isOnline(s)?'Online':'Offline'}</strong> · Último contato: ${esc(contactText(lastContact(s)))}</small></div></div>`).join(''):'<div class="muted master-no-screen">Nenhuma tela cadastrada.</div>';return `<div class="client-row client-row-v74"><div class="client-main"><strong>${esc(c.name)}</strong><div class="muted">${esc(c.slug||"")} • ${c.active?"Ativa":"Inativa"} • ${ms.length} usuário(s)</div><div class="client-screen-stats"><span><b>${cs.length}</b> tela(s)</span><span class="online-text"><b>${on.length}</b> online</span><span class="offline-text"><b>${off.length}</b> offline</span></div><div class="muted client-last">Plano: <b>${esc(c.plan_name||((c.screen_limit||1)+" tela(s)"))}</b>${c.plan_name==="Cortesia / Interno"?" · <b>Sem cobrança</b>":""} · Uso: <b>${cs.length}/${Number(c.screen_limit||1)}</b> telas<br>Último contato: ${esc(latest?ago(latest):'—')}</div><button class="btn ghost plan-btn" data-plan="${c.id}" data-plan-limit="${Number(c.screen_limit||1)}">Plano / limite</button><details class="master-screen-details"><summary>Ver telas</summary><div class="master-screen-list">${screenRows}</div></details></div><div class="client-status"><span class="badge">${c.active?"Ativa":"Inativa"}</span>${c.slug==="studio-a"?"<div class=\"muted\">Protegida</div>":`<div class="master-actions"><button class="btn ghost" data-toggle="${c.id}" data-active="${c.active}">${c.active?"Desativar":"Reativar"}</button><button class="btn danger" data-delete="${c.id}" data-name="${esc(c.name)}">Excluir</button></div>`}</div></div>`}).join("")||'<p class="muted">Nenhuma empresa cadastrada.</p>'}
+if(bl)bl.innerHTML=billable.map(c=>{let price=priceByName[c.plan_name];if(price==null&&Number(c.screen_limit||0)===1&&oneScreenPlan)price=Number(oneScreenPlan.monthly_price||0);const st=c.subscription_status||"active",label=st==="active"?"Ativa":st==="past_due"?"Em atraso":st==="suspended"?"Suspensa":st;return `<div class="billing-row"><div class="billing-top"><div><div class="billing-name">${esc(c.name)}</div><div class="billing-plan">${esc(c.plan_name||"Plano")} · ${Number(price||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}/mês</div></div><span class="billing-status ${esc(st)}">${esc(label)}</span></div><div class="billing-meta">Próximo vencimento: <b>${fmtDate(c.current_period_end)}</b> · Tolerância até: <b>${fmtDate(c.grace_until)}</b>${c.suspended_at?` · Suspensa em: <b>${fmtDate(c.suspended_at)}</b>`:""}</div></div>`}).join("")||'<p class="muted">Nenhuma assinatura faturável.</p>';$("#masterUpdated").textContent="Atualizado "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});$("#clientList").innerHTML=applyClientFilters().map(c=>{const ms=members.filter(m=>m.company_id===c.id&&m.active),cs=allScreens.filter(s=>s.company_id===c.id),on=cs.filter(isOnline),off=cs.filter(s=>!isOnline(s)),latest=cs.map(lastContact).filter(Boolean).sort((a,b)=>new Date(b)-new Date(a))[0];const screenRows=cs.length?cs.map(s=>`<div class="master-screen"><span class="screen-dot ${isOnline(s)?'online':'offline'}"></span><div><b>${esc(s.name||s.code||'Tela')}</b><small>Empresa: ${esc(c.name)} · Código: ${esc(s.code||'—')}</small><small>Status: <strong class="${isOnline(s)?'online-text':'offline-text'}">${isOnline(s)?'Online':'Offline'}</strong> · Último contato: ${esc(contactText(lastContact(s)))}</small></div></div>`).join(''):'<div class="muted master-no-screen">Nenhuma tela cadastrada.</div>';return `<div class="client-row client-row-v74 vd-client-card" data-client-card="${c.id}">
+<div class="vd-client-summary">
+ <div class="vd-client-summary-main">
+  <strong class="vd-client-summary-name">${esc(c.name)}</strong>
+  <div class="vd-client-summary-meta">${c.active?"Ativa":"Inativa"} · ${cs.length} tela(s) · ${on.length} online</div>
+ </div>
+ <button class="btn ghost vd-client-open" type="button" data-client-open="${c.id}">Abrir</button>
+</div>
+<div class="vd-client-details" hidden>
+ <div class="client-main">
+  <div class="muted">${esc(c.slug||"")} • ${c.active?"Ativa":"Inativa"} • ${ms.length} usuário(s)</div>
+  <div class="client-screen-stats"><span><b>${cs.length}</b> tela(s)</span><span class="online-text"><b>${on.length}</b> online</span><span class="offline-text"><b>${off.length}</b> offline</span></div>
+  <div class="muted client-last">Plano: <b>${esc(c.plan_name||((c.screen_limit||1)+" tela(s)"))}</b>${c.plan_name==="Cortesia / Interno"?" · <b>Sem cobrança</b>":""} · Uso: <b>${cs.length}/${Number(c.screen_limit||1)}</b> telas<br>Último contato: ${esc(latest?ago(latest):'—')}</div>
+  <button class="btn ghost plan-btn" data-plan="${c.id}" data-plan-limit="${Number(c.screen_limit||1)}">Plano / limite</button>
+  <details class="master-screen-details"><summary>Ver telas</summary><div class="master-screen-list">${screenRows}</div></details>
+ </div>
+ <div class="client-status"><span class="badge">${c.active?"Ativa":"Inativa"}</span>${c.slug==="studio-a"?"<div class=\"muted\">Protegida</div>":`<div class="master-actions"><button class="btn ghost" data-toggle="${c.id}" data-active="${c.active}">${c.active?"Desativar":"Reativar"}</button><button class="btn danger" data-delete="${c.id}" data-name="${esc(c.name)}">Excluir</button></div>`}</div>
+</div>
+</div>`}).join("")||'<p class="muted">Nenhuma empresa cadastrada.</p>'}
 async function manage(body){const {data,error}=await db.functions.invoke("master-manage-client",{body});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
-$("#clientList").onclick=async e=>{const p=e.target.closest("[data-plan]");if(p){const current=Number(p.dataset.planLimit||1),raw=prompt("Limite de telas deste cliente:",String(current));if(raw===null)return;const limit=Number(raw);if(!Number.isInteger(limit)||limit<1||limit>1000){alert("Informe um número inteiro entre 1 e 1000.");return}p.disabled=true;try{await manage({action:"set_plan",company_id:p.dataset.plan,screen_limit:limit,plan_name:`${limit} tela${limit===1?"":"s"}`});await load();alert("Plano atualizado.")}catch(err){alert("Erro: "+err.message)}finally{p.disabled=false}return}const t=e.target.closest("[data-toggle]");if(t){const active=t.dataset.active==="true";if(!confirm(active?"Desativar este cliente? O acesso será bloqueado, mas os dados serão preservados.":"Reativar este cliente?"))return;t.disabled=true;try{await manage({action:"toggle_active",company_id:t.dataset.toggle,active:!active});await load()}catch(err){alert("Erro: "+err.message)}finally{t.disabled=false}return}const d=e.target.closest("[data-delete]");if(d){const name=d.dataset.name;if(!confirm(`EXCLUIR DEFINITIVAMENTE ${name}? Esta ação remove a empresa, acessos e dados vinculados e não pode ser desfeita.`))return;if(!confirm(`Confirma novamente a exclusão definitiva de ${name}?`))return;d.disabled=true;try{await manage({action:"delete",company_id:d.dataset.delete});await load();alert("Cliente excluído.")}catch(err){alert("Erro: "+err.message)}finally{d.disabled=false}}};
+$("#clientList").onclick=async e=>{
+const openBtn=e.target.closest("[data-client-open]");
+if(openBtn){
+ const card=openBtn.closest("[data-client-card]"),details=card?.querySelector(".vd-client-details");
+ const willOpen=details?.hidden;
+ document.querySelectorAll("#clientList .vd-client-details").forEach(d=>d.hidden=true);
+ document.querySelectorAll("#clientList [data-client-open]").forEach(b=>b.textContent="Abrir");
+ if(details&&willOpen){details.hidden=false;openBtn.textContent="Fechar"}
+ return;
+}const p=e.target.closest("[data-plan]");if(p){const current=Number(p.dataset.planLimit||1),raw=prompt("Limite de telas deste cliente:",String(current));if(raw===null)return;const limit=Number(raw);if(!Number.isInteger(limit)||limit<1||limit>1000){alert("Informe um número inteiro entre 1 e 1000.");return}p.disabled=true;try{await manage({action:"set_plan",company_id:p.dataset.plan,screen_limit:limit,plan_name:`${limit} tela${limit===1?"":"s"}`});await load();alert("Plano atualizado.")}catch(err){alert("Erro: "+err.message)}finally{p.disabled=false}return}const t=e.target.closest("[data-toggle]");if(t){const active=t.dataset.active==="true";if(!confirm(active?"Desativar este cliente? O acesso será bloqueado, mas os dados serão preservados.":"Reativar este cliente?"))return;t.disabled=true;try{await manage({action:"toggle_active",company_id:t.dataset.toggle,active:!active});await load()}catch(err){alert("Erro: "+err.message)}finally{t.disabled=false}return}const d=e.target.closest("[data-delete]");if(d){const name=d.dataset.name;if(!confirm(`EXCLUIR DEFINITIVAMENTE ${name}? Esta ação remove a empresa, acessos e dados vinculados e não pode ser desfeita.`))return;if(!confirm(`Confirma novamente a exclusão definitiva de ${name}?`))return;d.disabled=true;try{await manage({action:"delete",company_id:d.dataset.delete});await load();alert("Cliente excluído.")}catch(err){alert("Erro: "+err.message)}finally{d.disabled=false}}};
 const search=$("#masterClientSearch"),filter=$("#masterClientFilter");
 if(search)search.oninput=()=>{masterQuery=search.value||"";load().catch(e=>alert(e.message))};
 if(filter)filter.onchange=()=>{masterFilter=filter.value||"all";load().catch(e=>alert(e.message))};
@@ -93,46 +120,3 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
 })();
 
 
-;(()=> {
- function enhance(){
-   const host=document.getElementById("clientList"); if(!host)return;
-   [...host.children].forEach(card=>{
-     if(card.nodeType!==1 || card.dataset.vdCompact==="1")return;
-     const originalText=(card.innerText||"").trim();
-     if(!originalText)return;
-     const lines=originalText.split("\n").map(s=>s.trim()).filter(Boolean);
-     // Company name is the first visible line from the original renderer.
-     let name=lines[0]||"Cliente";
-     // Strip metadata if original renderer places it on the same line.
-     name=name.split(/(?=\s+[a-z0-9-]+\s*•)/i)[0].trim();
-     const sm=originalText.match(/(\d+)\s+tela\(s\)/i);
-     const om=originalText.match(/(\d+)\s+online/i);
-     const inactive=/\bInativa\b/i.test(originalText);
-     const details=document.createElement("div");
-     details.className="vd-client-details";
-     while(card.firstChild)details.appendChild(card.firstChild);
-     const summary=document.createElement("div");
-     summary.className="vd-client-summary";
-     const main=document.createElement("div");main.className="vd-client-summary-main";
-     const nm=document.createElement("div");nm.className="vd-client-summary-name";nm.textContent=name;
-     const meta=document.createElement("div");meta.className="vd-client-summary-meta";
-     meta.textContent=`${inactive?"Inativa":"Ativa"} · ${sm?sm[1]:"0"} tela(s) · ${om?om[1]:"0"} online`;
-     main.append(nm,meta);
-     const btn=document.createElement("button");btn.type="button";btn.className="vd-client-open";btn.textContent="Abrir";btn.setAttribute("aria-expanded","false");
-     summary.append(main,btn);card.append(summary,details);
-     card.classList.add("vd-client-card");card.dataset.vdCompact="1";
-   });
- }
- function init(){
-   const host=document.getElementById("clientList");if(!host)return;
-   enhance();
-   new MutationObserver(enhance).observe(host,{childList:true});
-   host.addEventListener("click",e=>{
-     const b=e.target.closest(".vd-client-open");if(!b)return;
-     const card=b.closest(".vd-client-card"),open=!card.classList.contains("vd-open");
-     host.querySelectorAll(".vd-client-card.vd-open").forEach(c=>{c.classList.remove("vd-open");let x=c.querySelector(".vd-client-open");if(x){x.textContent="Abrir";x.setAttribute("aria-expanded","false")}});
-     if(open){card.classList.add("vd-open");b.textContent="Fechar";b.setAttribute("aria-expanded","true")}
-   });
- }
- if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
-})();
