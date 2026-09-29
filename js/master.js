@@ -232,3 +232,30 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
    if(btn)placeMenu(btn,menu);
  },true);
 })();
+
+
+;(()=>{
+ function getDrawer(){
+   return document.querySelector(".master-drawer,.master-sidebar,.master-menu,[data-master-drawer]");
+ }
+ function drawerIsOpen(drawer){
+   if(!drawer)return false;
+   const r=drawer.getBoundingClientRect();
+   return r.width>20 && r.right>0 && r.left<window.innerWidth;
+ }
+ function closeMasterDrawer(){
+   const drawer=getDrawer();
+   if(!drawer)return;
+   const close=document.querySelector("[data-master-menu-close],.master-drawer-close,.menu-close");
+   if(close){ close.click(); return; }
+   drawer.classList.remove("open","active","show");
+   document.body.classList.remove("master-menu-open","menu-open","drawer-open");
+ }
+ document.addEventListener("click",e=>{
+   const drawer=getDrawer();
+   if(!drawer||!drawerIsOpen(drawer))return;
+   if(drawer.contains(e.target))return;
+   if(e.target.closest(".master-menu-btn,.menu-toggle,[data-master-menu]"))return;
+   closeMasterDrawer();
+ },true);
+})();
