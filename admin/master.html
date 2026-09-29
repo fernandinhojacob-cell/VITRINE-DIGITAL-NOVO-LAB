@@ -101,87 +101,53 @@
 </style>
 
 <style>
-/* Master 9.0 — Dashboard central + navegação */
-.master-shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 76px)}
-.master-side{border-right:1px solid #1d3550;background:#071522;padding:18px 12px;position:sticky;top:0;height:100vh}
-.master-side-title{font-size:12px;color:#7f96b2;text-transform:uppercase;letter-spacing:.08em;padding:0 10px 10px}
-.master-nav{display:grid;gap:6px}
-.master-nav button{border:0;background:transparent;color:#a9bad0;text-align:left;padding:11px 12px;border-radius:10px;font-weight:700;font-size:14px}
-.master-nav button.active,.master-nav button:hover{background:#0d2c4a;color:#fff}
-.master-main{min-width:0}
-.master-view{display:none}.master-view.active{display:block}
-.master-menu-btn{display:none}
-.master-dash-note{margin:12px 0 0;color:#93a8c1;font-size:13px}
-@media(max-width:760px){
- .master-shell{display:block;min-height:auto}
- .master-side{position:fixed;left:-270px;top:0;width:245px;height:100dvh;z-index:1000;transition:left .2s ease;box-shadow:8px 0 30px rgba(0,0,0,.35)}
- .master-side.open{left:0}
- .master-menu-btn{display:inline-flex!important;align-items:center;justify-content:center;position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:900;width:52px;height:52px;border-radius:50%;border:1px solid #295071;background:#0b2137;color:#fff;font-size:23px;box-shadow:0 8px 25px rgba(0,0,0,.35)}
- .master-side-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999}
- .master-side-backdrop.open{display:block}
-}
+/* Master 9.1 — Cobrança */
+.billing-card{margin:14px 0}.billing-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
+.billing-kpi,.billing-row{border:1px solid #1d3550;background:#091625;border-radius:13px}
+.billing-kpi{padding:12px}.billing-kpi strong{display:block;font-size:23px}.billing-kpi span{font-size:12px;color:#93a8c1}
+.billing-list{display:grid;gap:9px}.billing-row{padding:12px}.billing-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.billing-name{font-weight:800;font-size:16px}.billing-plan,.billing-meta{font-size:12px;color:#93a8c1;line-height:1.45}
+.billing-status{font-size:11px;font-weight:800;border:1px solid #295071;border-radius:999px;padding:5px 8px;white-space:nowrap}
+.billing-status.active{color:#59d987}.billing-status.past_due{color:#ffd75a}.billing-status.suspended{color:#ff7b7b}
+@media(max-width:760px){.billing-summary{grid-template-columns:1fr 1fr}.billing-kpi{padding:10px}.billing-kpi strong{font-size:21px}}
 </style>
 <style>
-@media(min-width:761px){body{padding-left:220px}}
-body[data-master-route="dashboard"] .master-plans-card,
-body[data-master-route="dashboard"] .usage-card,
-body[data-master-route="dashboard"] .reports-card{display:none!important}
-body[data-master-route="clients"] .master-head,
-body[data-master-route="clients"] .master-grid,
-body[data-master-route="clients"] .master-plans-card,
-body[data-master-route="clients"] .usage-card,
-body[data-master-route="clients"] .reports-card{display:none!important}
-body[data-master-route="plans"] .master-head,
-body[data-master-route="plans"] .master-grid,
-body[data-master-route="plans"] .usage-card,
-body[data-master-route="plans"] .reports-card,
-body[data-master-route="plans"] #clientList,
-body[data-master-route="plans"] #masterClientSearch,
-body[data-master-route="plans"] #masterClientFilter,
-body[data-master-route="plans"] #refreshMaster{display:none!important}
-body[data-master-route="usage"] .master-head,
-body[data-master-route="usage"] .master-grid,
-body[data-master-route="usage"] .master-plans-card,
-body[data-master-route="usage"] .reports-card,
-body[data-master-route="usage"] #clientList,
-body[data-master-route="usage"] #masterClientSearch,
-body[data-master-route="usage"] #masterClientFilter,
-body[data-master-route="usage"] #refreshMaster{display:none!important}
-body[data-master-route="reports"] .master-head,
-body[data-master-route="reports"] .master-grid,
-body[data-master-route="reports"] .master-plans-card,
-body[data-master-route="reports"] .usage-card,
-body[data-master-route="reports"] #clientList,
-body[data-master-route="reports"] #masterClientSearch,
-body[data-master-route="reports"] #masterClientFilter,
-body[data-master-route="reports"] #refreshMaster{display:none!important}
+.master-side{position:fixed;left:0;top:0;width:220px;height:100vh;z-index:50;border-right:1px solid #1d3550;background:#071522;padding:18px 12px}
+.master-side-title{font-size:12px;color:#7f96b2;text-transform:uppercase;letter-spacing:.08em;padding:0 10px 10px}.master-nav{display:grid;gap:6px}
+.master-nav button{border:0;background:transparent;color:#a9bad0;text-align:left;padding:11px 12px;border-radius:10px;font-weight:700;font-size:14px}.master-nav button.active{background:#0d2c4a;color:#fff}
+.master-menu-btn{display:none}body{padding-left:220px}
+@media(max-width:760px){body{padding-left:0}.master-side{left:-270px;width:235px;transition:left .2s}.master-side.open{left:0}.master-menu-btn{display:flex;position:fixed;right:14px;bottom:22px;z-index:49;width:52px;height:52px;border-radius:50%;align-items:center;justify-content:center;background:#0b2137;color:#fff;border:1px solid #295071;font-size:22px}.master-side.open~.master-menu-btn{display:none}}
+</style>
+<style>
+body:not([data-master-route="billing"]) #billingSection{display:none!important}
 body[data-master-route="billing"] .master-head,
 body[data-master-route="billing"] .master-grid,
 body[data-master-route="billing"] .master-plans-card,
 body[data-master-route="billing"] .usage-card,
-body[data-master-route="billing"] .reports-card{display:none!important}
-.master-route-title{display:none;padding:18px 0 4px}
-body:not([data-master-route="dashboard"]) .master-route-title{display:block}
+body[data-master-route="billing"] .reports-card,
+body[data-master-route="billing"] #clientList,
+body[data-master-route="billing"] #masterClientSearch,
+body[data-master-route="billing"] #masterClientFilter,
+body[data-master-route="billing"] #refreshMaster{display:none!important}
 </style>
-</head><body><div class="master-side-backdrop" id="masterNavBackdrop"></div><aside class="master-side" id="masterSide">
- <div class="master-side-title">Painel Master</div>
- <nav class="master-nav">
-  <button class="active" data-master-route="dashboard">▦ Dashboard</button>
-  <button data-master-route="clients">👥 Clientes</button>
-  <button data-master-route="reports">▤ Relatórios</button>
-  <button data-master-route="billing">◉ Cobrança</button>
-  <button data-master-route="plans">◇ Planos</button>
-  <button data-master-route="usage">↗ Consumo</button>
- </nav>
-</aside><button class="master-menu-btn" id="masterMenuBtn" type="button" aria-label="Abrir menu">☰</button>
+</head><body><aside class="master-side" id="masterSide"><div class="master-side-title">Painel Master</div><nav class="master-nav">
+<button data-master-route="dashboard">▦ Dashboard</button><button data-master-route="clients">👥 Clientes</button><button data-master-route="reports">▤ Relatórios</button><button data-master-route="billing">◉ Cobrança</button><button data-master-route="plans">◇ Planos</button><button data-master-route="usage">↗ Consumo</button>
+</nav></aside><button class="master-menu-btn" id="masterMenuBtn">☰</button>
 <header class="topbar"><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>MASTER 8.1.2 MOBILE</small></div><div class="top-actions"><span class="badge">Administrador Master</span><a class="btn ghost" href="index.html">Painel empresa</a><button id="masterLogout" class="btn ghost">Sair</button></div></header>
 <main class="master-wrap"><div class="master-head"><div><h1>Painel Master</h1><p class="muted">Clientes e empresas da Vitrine Digital.</p></div><button id="newClientBtn" class="btn">+ Novo cliente</button></div><div class="master-grid"><div class="master-card"><span>Empresas</span><strong id="mCompanies">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Ativas</span><strong id="mActive">0</strong><small class="muted">em operação</small></div><div class="master-card"><span>Usuários</span><strong id="mMembers">0</strong><small class="muted">acessos</small></div><div class="master-card"><span>Telas</span><strong id="mScreens">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Online</span><strong id="mOnline">0</strong><small class="muted">com comunicação recente</small></div><div class="master-card"><span>Offline</span><strong id="mOffline">0</strong><small class="muted">sem comunicação recente</small></div><div class="master-card"><span>Assinaturas</span><strong id="mSubscriptions">0</strong><small class="muted">ativas</small></div><div class="master-card"><span>MRR</span><strong id="mMRR">R$ 0</strong><small class="muted">receita mensal recorrente</small></div></div><div class="card"><div class="section-head"><div><h2>Clientes</h2><p class="muted">Gerencie empresas e acompanhe suas telas. <span id="masterUpdated"></span></p></div><button id="refreshMaster" class="btn ghost">Atualizar</button></div><div class="master-client-tools">
 <input id="masterClientSearch" type="search" placeholder="Buscar cliente, empresa ou plano…" autocomplete="off">
 <select id="masterClientFilter" aria-label="Filtrar clientes">
 <option value="all">Todos</option><option value="active">Ativos</option><option value="inactive">Inativos</option><option value="offline">Com tela offline</option>
-</select></div><div id="clientList"></div></div><section class="card master-plans-card"><div class="section-head"><div><h2>Planos</h2><p class="muted">Configure nome, limite de telas e valor mensal.</p></div></div><div id="masterPlans" class="master-plans"></div></section></main>
+</select></div><div id="clientList"></div></div><section class="card billing-card" id="billingSection">
+<div class="section-head"><div><h2>Cobrança</h2><p class="muted">Assinaturas, vencimentos e tolerância dos clientes.</p></div></div>
+<div class="billing-summary">
+ <div class="billing-kpi"><strong id="bActive">0</strong><span>ativas</span></div>
+ <div class="billing-kpi"><strong id="bPastDue">0</strong><span>em atraso</span></div>
+ <div class="billing-kpi"><strong id="bSuspended">0</strong><span>suspensas</span></div>
+ <div class="billing-kpi"><strong id="bMRR">R$ 0</strong><span>MRR</span></div>
+</div><div id="billingList" class="billing-list"><p class="muted">Carregando cobranças…</p></div></section><section class="card master-plans-card"><div class="section-head"><div><h2>Planos</h2><p class="muted">Configure nome, limite de telas e valor mensal.</p></div></div><div id="masterPlans" class="master-plans"></div></section></main>
 <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h2>Novo cliente</h2><form id="newClientForm" class="master-form"><label>Nome da empresa<input name="name" required placeholder="Ex.: Mercado Central"></label><label>E-mail do proprietário<input name="email" type="email" required placeholder="cliente@email.com"></label><label>Senha temporária<input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label><p class="muted">Cria a empresa e o acesso do proprietário.</p><button class="btn" type="submit">Criar empresa e acesso</button><div id="masterMsg" class="muted"></div></form></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.0-dashboard"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.1-cobranca"></script>
 <script>
 (async function(){
   const host=document.getElementById("masterPlans");
@@ -230,24 +196,4 @@ body:not([data-master-route="dashboard"]) .master-route-title{display:block}
 })();
 </script>
 
-
-<script>
-(function(){
- const body=document.body, side=document.getElementById("masterSide"), back=document.getElementById("masterNavBackdrop"), menu=document.getElementById("masterMenuBtn");
- const valid=["dashboard","clients","reports","billing","plans","usage"];
- function setRoute(r){
-   if(!valid.includes(r))r="dashboard";
-   body.dataset.masterRoute=r;
-   document.querySelectorAll("[data-master-route]").forEach(b=>b.classList.toggle("active",b.dataset.masterRoute===r));
-   side?.classList.remove("open");back?.classList.remove("open");
-   try{sessionStorage.setItem("vd_master_route",r)}catch(e){}
-   window.scrollTo({top:0,behavior:"instant"});
- }
- document.querySelectorAll("[data-master-route]").forEach(b=>b.addEventListener("click",()=>setRoute(b.dataset.masterRoute)));
- menu?.addEventListener("click",()=>{side?.classList.toggle("open");back?.classList.toggle("open")});
- back?.addEventListener("click",()=>{side?.classList.remove("open");back?.classList.remove("open")});
- let initial="dashboard";try{initial=sessionStorage.getItem("vd_master_route")||"dashboard"}catch(e){}
- setRoute(initial);
-})();
-</script>
-</body></html>
+<script>(function(){const body=document.body,side=document.getElementById("masterSide"),menu=document.getElementById("masterMenuBtn");function setRoute(r){body.dataset.masterRoute=r;document.querySelectorAll("[data-master-route]").forEach(b=>b.classList.toggle("active",b.dataset.masterRoute===r));side?.classList.remove("open");try{sessionStorage.setItem("vd_master_route",r)}catch(e){}window.scrollTo(0,0)}document.querySelectorAll("[data-master-route]").forEach(b=>b.onclick=()=>setRoute(b.dataset.masterRoute));menu?.addEventListener("click",()=>side?.classList.toggle("open"));let r="dashboard";try{r=sessionStorage.getItem("vd_master_route")||r}catch(e){}setRoute(r)})();</script></body></html>
