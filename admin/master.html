@@ -318,15 +318,31 @@ html,body{max-width:100%;overflow-x:hidden}
    if(!host||!client)return;
    const [c,s,m,p]=await Promise.all([
      client.from("companies").select("id,name,active"),
-     client.from("screens").select("id,company_id"),
+     client.from("screens").select("id,company_id,active,last_seen_at,updated_at"),
      client.from("media").select("id,company_id,active"),
      client.from("playlists").select("id,company_id")
    ]);
    const C=c.data||[],S=s.data||[],M=m.data||[],P=p.data||[];
+   let H=[];
+   try{
+     const hb=await client.from("screen_heartbeat").select("screen_id,last_seen_at");
+     H=hb.data||[];
+   }catch(_){}
+   const latestByScreen={};
+   H.forEach(v=>{
+     const t=new Date(v.last_seen_at).getTime();
+     if(!latestByScreen[v.screen_id] || t>latestByScreen[v.screen_id]) latestByScreen[v.screen_id]=t;
+   });
+   const now=Date.now();
    host.innerHTML=C.map(x=>{
      const cs=S.filter(y=>y.company_id===x.id);
      const cm=M.filter(y=>y.company_id===x.id&&y.active!==false);
      const cp=P.filter(y=>y.company_id===x.id);
+     const online=cs.filter(y=>latestByScreen[y.id] && now-latestByScreen[y.id]<=90000).length;
+     const offline=Math.max(0,cs.length-online);
+     const lastTimes=cs.map(y=>latestByScreen[y.id]||new Date(y.last_seen_at||y.updated_at||0).getTime()).filter(Boolean);
+     const last=lastTimes.length?Math.max(...lastTimes):0;
+     const ago=t=>{if(!t)return"—";const d=Math.max(0,Date.now()-t),m=Math.floor(d/60000);if(m<1)return"agora";if(m<60)return`há ${m} min`;const hh=Math.floor(m/60);if(hh<24)return`há ${hh} h`;return`há ${Math.floor(hh/24)} d`;};
      return `<div class="billing-row vd931-report" data-r931="${x.id}">
        <div class="vd931-summary">
          <div class="vd931-main"><div class="billing-name">${esc(x.name)}</div>
@@ -335,6 +351,8 @@ html,body{max-width:100%;overflow-x:hidden}
        </div>
        <div class="vd931-details" hidden>
          <div><b>Telas cadastradas:</b> ${cs.length}</div>
+         <div><b>Online:</b> ${online} · <b>Offline:</b> ${offline}</div>
+         <div><b>Último contato:</b> ${last?ago(last):"—"}</div>
          <div><b>Conteúdos ativos:</b> ${cm.length}</div>
          <div><b>Playlists:</b> ${cp.length}</div>
          <div><b>Empresa:</b> ${x.active===false?"Inativa":"Ativa"}</div>
