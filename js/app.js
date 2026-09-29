@@ -82,7 +82,8 @@ function openModal(title,body){qs('#modalTitle').textContent=title;qs('#modalBod
 function closeModal(){qs('#modal').classList.add('hidden')}
 qs('#closeModal').onclick=closeModal;qs('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
 async function renderMyPlan(){
- const cur=qs('#myPlanCurrent'),opts=qs('#myPlanOptions'),req=qs('#myPlanRequest');if(!cur||!opts)return;
+ const cur=qs('#myPlanCurrent'),opts=qs('#myPlanOptions'),req=qs('#myPlanRequest');
+ if(!cur||!opts)return;
  if(!db||!vdCompany){cur.innerHTML='<strong>Plano atual</strong><p class="muted">Conecte o Supabase e entre na sua empresa para consultar o plano.</p>';opts.innerHTML='';return}
  try{
   const used=(demo.screens||[]).filter(x=>String(x.company_id||'')===String(vdCompany.id)&&x.active!==false).length;
@@ -90,21 +91,24 @@ async function renderMyPlan(){
   const {data:plans,error:pe}=await db.from('plans').select('id,name,screen_limit,monthly_price,active,sort_order').eq('active',true).order('sort_order',{ascending:true});if(pe)throw pe;
   const limit=Number(company.screen_limit||1);
   cur.innerHTML=`<div class="section-head"><div><span class="muted">Plano atual</span><h2>${esc(company.plan_name||limit+' tela'+(limit===1?'':'s'))}</h2><p>${used} de ${limit} tela${limit===1?'':'s'} em uso</p></div><span class="badge">${used}/${limit}</span></div>`;
-  opts.innerHTML=(plans||[]).map(p=>{const pl=Number(p.screen_limit||1),price=Number(p.monthly_price||0),current=pl===limit;return `<div class="card"><span class="muted">${current?'Seu plano':'Opção'}</span><h2>${esc(p.name)}</h2><p><b>${pl}</b> tela${pl===1?'':'s'} · <b>R$ ${price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/mês</b></p><button class="btn ${current?'ghost':''}" type="button" data-pay-plan="${p.id}" data-plan-name="${esc(p.name)}" data-plan-limit="${pl}" data-plan-price="${price}" ${current?'disabled':''}>${current?'Plano atual':'Assinar / Pagar'}</button></div>`}).join('')||'<p class="muted">Nenhum plano disponível.</p>';
+  opts.innerHTML=(plans||[]).map(p=>{const pl=Number(p.screen_limit||1),price=Number(p.monthly_price||0),current=pl===limit;return `<div class="card"><span class="muted">${current?'Seu plano':'Opção'}</span><h2>${esc(p.name)}</h2><p><b>${pl}</b> tela${pl===1?'':'s'} · <b>R$ ${price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/mês</b></p><button class="btn ${current?'ghost':''}" type="button" data-pay-plan="${p.id}" data-pay-name="${esc(p.name)}" data-pay-limit="${pl}" data-pay-price="${price}" ${current?'disabled':''}>${current?'Plano atual':'Assinar / Pagar'}</button></div>`}).join('')||'<p class="muted">Nenhum plano disponível.</p>';
   opts.onclick=async e=>{
    const b=e.target.closest('[data-pay-plan]');if(!b)return;
-   const name=b.dataset.planName,pl=Number(b.dataset.planLimit),price=Number(b.dataset.planPrice);
-   if(pl<used){const excess=used-pl;req.style.display='block';req.innerHTML=`<h2>Antes de mudar para ${esc(name)}</h2><p>Este plano permite <b>${pl} tela${pl===1?'':'s'}</b>, mas você tem <b>${used} telas ativas</b>.</p><p>Desative <b>${excess} tela${excess===1?'':'s'}</b> antes de continuar para o pagamento.</p><button class="btn" type="button" id="goScreensForDowngrade">Ir para minhas telas</button><p class="muted">A tela desativada não será excluída. Você poderá reativá-la depois se o seu plano permitir.</p>`;const goBtn=qs('#goScreensForDowngrade');if(goBtn)goBtn.onclick=()=>go('screens');req.scrollIntoView({behavior:'smooth',block:'nearest'});vdToast(`Desative ${excess} tela${excess===1?'':'s'} para mudar para ${name}.`,'error');return}
-   b.disabled=true;const old=b.textContent;b.textContent='Abrindo pagamento…';
+   const name=b.dataset.payName,pl=Number(b.dataset.payLimit),price=Number(b.dataset.payPrice);
+   if(pl<used){const excess=used-pl;req.style.display='block';req.innerHTML=`<h2>Antes de mudar para ${esc(name)}</h2><p>Este plano permite <b>${pl} tela${pl===1?'':'s'}</b>, mas você tem <b>${used} telas ativas</b>.</p><p>Desative <b>${excess} tela${excess===1?'':'s'}</b> antes de continuar.</p><button class="btn" type="button" id="goScreensForDowngrade">Ir para minhas telas</button><p class="muted">A tela desativada não será excluída. Você poderá reativá-la depois se o seu plano permitir.</p>`;const goBtn=qs('#goScreensForDowngrade');if(goBtn)goBtn.onclick=()=>go('screens');req.scrollIntoView({behavior:'smooth',block:'nearest'});vdToast(`Desative ${excess} tela${excess===1?'':'s'} para mudar para ${name}.`,'error');return}
+   b.disabled=true;b.textContent='Abrindo pagamento…';
    try{
     const {data:{session}}=await db.auth.getSession();if(!session)throw new Error('Sessão expirada. Entre novamente.');
-    req.style.display='block';req.innerHTML=`<h2>Preparando pagamento</h2><p>Plano <b>${esc(name)}</b> · ${pl} tela${pl===1?'':'s'} · R$ ${price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/mês.</p><p class="muted">Você será direcionado ao checkout seguro da InfinitePay.</p>`;
-    const {data,error}=await db.functions.invoke('infinitepay-create-checkout',{body:{company_id:vdCompany.id,plan_id:b.dataset.payPlan,redirect_url:location.origin+location.pathname+'?pagamento=retorno'}});
-    if(error)throw error;if(!data?.url)throw new Error(data?.message||data?.error||'A InfinitePay não retornou o link de pagamento.');
-    location.href=data.url;
-   }catch(err){console.error('InfinitePay checkout',err);req.style.display='block';req.innerHTML=`<h2>Não foi possível abrir o pagamento</h2><p>${esc(err.message||String(err))}</p><p class="muted">Tente novamente. Nenhum plano foi alterado.</p>`;vdToast('Não foi possível abrir o checkout.','error');b.disabled=false;b.textContent=old}
+    const base=String((window.SUPABASE_CONFIG||{}).url||'').replace(/\/$/,'');if(!base)throw new Error('Supabase não configurado.');
+    const redirect=location.origin+location.pathname+'?payment=return';
+    const r=await fetch(base+'/functions/v1/infinitepay-create-checkout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({company_id:vdCompany.id,plan_id:b.dataset.payPlan,redirect_url:redirect})});
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok||!out.url){if(out.error==='screen_limit')throw new Error(`Este plano permite ${out.plan_limit} tela(s), mas você tem ${out.active_screens} tela(s) ativa(s).`);throw new Error(out.message||out.error||'Não foi possível criar o pagamento.');}
+    req.style.display='block';req.innerHTML=`<h2>Checkout preparado</h2><p>Plano: <b>${esc(name)}</b> · ${pl} tela${pl===1?'':'s'} · R$ ${price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/mês.</p><p class="muted">Você será direcionado para a InfinitePay. O plano só será alterado depois da confirmação do pagamento.</p>`;
+    location.href=out.url;
+   }catch(err){console.error('InfinitePay',err);vdToast(err.message||'Não foi possível abrir o pagamento.','error');req.style.display='block';req.innerHTML=`<h2>Pagamento não iniciado</h2><p>${esc(err.message||'Não foi possível abrir o pagamento.')}</p>`;}
+   finally{b.disabled=false;b.textContent='Assinar / Pagar'}
   };
-  const params=new URLSearchParams(location.search);if(params.get('pagamento')==='retorno'){req.style.display='block';req.innerHTML='<h2>Pagamento recebido para conferência</h2><p>Aguarde alguns segundos enquanto a InfinitePay confirma o pagamento. O plano será atualizado automaticamente após a confirmação.</p><button class="btn" type="button" id="refreshPaidPlan">Atualizar plano</button>';const rb=qs('#refreshPaidPlan');if(rb)rb.onclick=()=>renderMyPlan()}
  }catch(e){console.error('Meu plano',e);cur.innerHTML='<strong>Não foi possível carregar o plano.</strong><p class="muted">'+esc(e.message||e)+'</p>';opts.innerHTML=''}
 }
 function go(section){document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.section===section));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===section));if(section==='myplan')renderMyPlan();else render()}
