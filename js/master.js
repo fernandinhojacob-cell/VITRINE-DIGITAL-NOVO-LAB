@@ -56,7 +56,13 @@ if(bl)bl.innerHTML=billable.map(c=>{let price=priceByName[c.plan_name];if(price=
   <strong class="vd-client-summary-name">${esc(c.name)}</strong>
   <div class="vd-client-summary-meta">${c.active?"Ativa":"Inativa"} · ${cs.length} tela(s) · ${on.length} online</div>
  </div>
- <button class="btn ghost vd-client-open" type="button" data-client-open="${c.id}">Abrir</button>
+ <div class="vd-client-top-actions">
+  <button class="btn ghost vd-client-open" type="button" data-client-open="${c.id}">Abrir</button>
+  ${c.slug==="vitrine-digital-interno"?'<button class="btn ghost" type="button" disabled title="Cliente interno protegido">⋮ Opções</button>':`<button class="btn ghost vd-client-options" type="button" data-client-options="${c.id}" aria-expanded="false">⋮ Opções</button>`}
+ </div>
+</div>
+<div class="vd-client-options-menu" data-client-options-menu="${c.id}" hidden>
+ ${c.slug==="vitrine-digital-interno"?"":`<button class="btn ghost" type="button" data-toggle="${c.id}" data-active="${c.active}">${c.active?"Desativar cliente":"Reativar cliente"}</button><button class="btn danger" type="button" data-delete="${c.id}" data-name="${esc(c.name)}">Excluir definitivamente</button>`}
 </div>
 <div class="vd-client-details" hidden>
  <div class="client-main">
@@ -66,11 +72,18 @@ if(bl)bl.innerHTML=billable.map(c=>{let price=priceByName[c.plan_name];if(price=
   <button class="btn ghost plan-btn" data-plan="${c.id}" data-plan-limit="${Number(c.screen_limit||1)}">Plano / limite</button>
   <details class="master-screen-details"><summary>Ver telas</summary><div class="master-screen-list">${screenRows}</div></details>
  </div>
- <div class="client-status"><span class="badge">${c.active?"Ativa":"Inativa"}</span>${c.slug==="studio-a"?"<div class=\"muted\">Protegida</div>":`<div class="master-actions"><button class="btn ghost" data-toggle="${c.id}" data-active="${c.active}">${c.active?"Desativar":"Reativar"}</button><button class="btn danger" data-delete="${c.id}" data-name="${esc(c.name)}">Excluir</button></div>`}</div>
+ <div class="client-status"><span class="badge">${c.active?"Ativa":"Inativa"}</span>${c.slug==="vitrine-digital-interno"?"<div class=\"muted\">Protegida</div>":""}</div>
 </div>
 </div>`}).join("")||'<p class="muted">Nenhuma empresa cadastrada.</p>'}
 async function manage(body){const {data,error}=await db.functions.invoke("master-manage-client",{body});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
 $("#clientList").onclick=async e=>{
+const optionsBtn=e.target.closest("[data-client-options]");
+if(optionsBtn){
+ const id=optionsBtn.dataset.clientOptions,menu=document.querySelector(`[data-client-options-menu="${id}"]`);
+ document.querySelectorAll("[data-client-options-menu]").forEach(m=>{if(m!==menu)m.hidden=true});
+ if(menu){menu.hidden=!menu.hidden;optionsBtn.setAttribute("aria-expanded",String(!menu.hidden))}
+ return;
+}
 const openBtn=e.target.closest("[data-client-open]");
 if(openBtn){
  const companyId=openBtn.dataset.clientOpen;
