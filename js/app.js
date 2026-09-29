@@ -12,14 +12,25 @@ async function initCompanyContext(){
  if(!db)return null;
  const {data:{session}}=await db.auth.getSession();
  if(!session)return null;
- const {data:members,error}=await db.from('company_members').select('company_id,role,active').eq('user_id',session.user.id).eq('active',true).limit(1);
+ const {data:members,error}=await db.from('company_members').select('company_id,role,active').eq('user_id',session.user.id).eq('active',true);
  if(error)throw error;
- const member=members?.[0];
- if(!member)throw new Error('Seu usuário ainda não está vinculado a uma empresa.');
- const {data:company,error:companyError}=await db.from('companies').select('id,name,slug,active').eq('id',member.company_id).single();
+ if(!members?.length)throw new Error('Seu usuário ainda não está vinculado a uma empresa.');
+ const ids=members.map(m=>m.company_id);
+ const {data:companies,error:companyError}=await db.from('companies').select('id,name,slug,active').in('id',ids).eq('active',true);
  if(companyError)throw companyError;
- vdCompany={...company,role:member.role};
- const badge=qs('#companyBadge');if(badge){badge.textContent=company.name+(member.role==='owner'?' • Proprietário':'');badge.title='Empresa ativa no painel';}
+ if(!companies?.length)throw new Error('Nenhuma empresa ativa disponível.');
+ const saved=localStorage.getItem('vd_active_company_id');
+ const company=companies.find(c=>c.id===saved)||companies[0];
+ const member=members.find(m=>m.company_id===company.id);
+ vdCompany={...company,role:member?.role||'member'};
+ localStorage.setItem('vd_active_company_id',company.id);
+ const badge=qs('#companyBadge');if(badge){badge.textContent=company.name+(member?.role==='owner'?' • Proprietário':'');badge.title='Empresa ativa no painel';}
+ const sw=qs('#companySwitcher');
+ if(sw){
+   sw.innerHTML=companies.map(c=>`<option value="${c.id}" ${c.id===company.id?'selected':''}>${esc(c.name)}</option>`).join('');
+   sw.title='Trocar empresa ativa';
+   if(!sw.dataset.bound){sw.dataset.bound='1';sw.addEventListener('change',()=>{localStorage.setItem('vd_active_company_id',sw.value);location.reload()})}
+ }
  return vdCompany;
 }
 function updateConnectionState(){const b=qs('#connectionBadge');if(!b)return;if(!db){b.textContent='Demo local';b.classList.remove('connection-stale');return}if(vdHadLoadError){const ago=vdLastSuccessfulSync?Math.max(0,Math.floor((Date.now()-vdLastSuccessfulSync)/60000)):null;b.textContent=ago===null?'Supabase • sem atualização':`Supabase • dados de há ${ago} min`;b.classList.add('connection-stale')}else{b.textContent='Supabase conectado';b.classList.remove('connection-stale')}}
@@ -55,7 +66,9 @@ async function bootLocalPlayer(){
 }
 async function load(table){
  if(!db)return demo[table]||[];
- const {data,error}=await db.from(table).select('*').order('created_at',{ascending:false});
+ let q=db.from(table).select('*').order('created_at',{ascending:false});
+ if(VD_COMPANY_TABLES.has(table)&&vdCompany?.id)q=q.eq('company_id',vdCompany.id);
+ const {data,error}=await q;
  if(error){console.error('load '+table,error);vdHadLoadError=true;updateConnectionState();vdToast('Falha ao atualizar '+table+'. Mantendo os últimos dados carregados.','error');return demo[table]||[]}
  vdLastSuccessfulSync=Date.now();return data||[]
 }
