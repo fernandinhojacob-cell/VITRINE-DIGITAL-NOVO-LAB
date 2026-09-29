@@ -226,6 +226,14 @@ html,body{max-width:100%;overflow-x:hidden}
   align-self:center!important;
 }
 </style>
+<style id="reports-expand-930">
+#reportsList .vd-report-card{display:block!important;width:100%;max-width:100%;box-sizing:border-box}
+#reportsList .vd-report-summary{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#reportsList .vd-report-summary>div{min-width:0}
+#reportsList [data-report-open]{flex:0 0 auto}
+#reportsList .vd-report-details{margin-top:12px;padding-top:12px;border-top:1px solid #1c3d5b;line-height:1.8}
+#reportsList .vd-report-details[hidden]{display:none!important}
+</style>
 </head><body><aside class="master-side" id="masterSide"><div class="master-side-title">Painel Master</div><nav class="master-nav">
 <button data-master-route="dashboard">▦ Dashboard</button><button data-master-route="clients">👥 Clientes</button><button data-master-route="reports">▤ Relatórios</button><button data-master-route="billing">◉ Cobrança</button><button data-master-route="plans">◇ Planos</button><button data-master-route="usage">↗ Consumo</button>
 </nav></aside><button class="master-menu-btn" id="masterMenuBtn">☰</button>
@@ -245,7 +253,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <section class="card" id="usageSection"><div class="section-head"><div><h2>Consumo da plataforma</h2><p class="muted">Uso catalogado, sem estimar egress.</p></div></div><div class="billing-summary"><div class="billing-kpi"><strong id="uMedia">0</strong><span>arquivos ativos</span></div><div class="billing-kpi"><strong id="uStorage">0 B</strong><span>armazenamento catalogado</span></div><div class="billing-kpi"><strong id="uScreens">0</strong><span>telas cadastradas</span></div><div class="billing-kpi"><strong id="uAvg">0 B</strong><span>telas online</span></div></div></section>
 <section class="card master-plans-card" id="plansSection"><div class="section-head"><div><h2>Planos</h2><p class="muted">Configure nome, limite de telas e valor mensal.</p></div></div><div id="masterPlans" class="master-plans"></div></section></main>
 <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h2>Novo cliente</h2><form id="newClientForm" class="master-form"><label>Nome da empresa<input name="name" required placeholder="Ex.: Mercado Central"></label><label>E-mail do proprietário<input name="email" type="email" required placeholder="cliente@email.com"></label><label>Senha temporária<input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label><p class="muted">Cria a empresa e o acesso do proprietário.</p><button class="btn" type="submit">Criar empresa e acesso</button><div id="masterMsg" class="muted"></div></form></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.2.9-online-real"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.3.0-relatorios-expansiveis"></script>
 <script>
 (async function(){
   const host=document.getElementById("masterPlans");
