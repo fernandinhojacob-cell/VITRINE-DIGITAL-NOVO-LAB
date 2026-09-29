@@ -50,28 +50,39 @@
 @media(max-width:760px){.master-plan{padding:11px 12px}.master-plan-summary{align-items:flex-start}.master-plan-title{display:grid;gap:3px}.master-plan-summary-actions{gap:6px}.master-plan-meta{font-size:12px}}
 @media(max-width:430px){.master-plan-summary{gap:8px}.master-plan-summary-actions .badge{font-size:11px}.master-plan-edit{min-height:34px!important;padding:5px 9px!important;font-size:13px!important}}
 </style><style>
-/* Master 8.1 — painel compacto, sem remover funções */
+/* Master 8.1 — evolução visual sem remover funções */
 @media(max-width:760px){
- .master-wrap{padding:14px!important}
- .master-head{display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;margin-bottom:12px!important}
- .master-head h1{font-size:24px!important;margin:0 0 4px!important}
- .master-head p{font-size:13px!important;margin:0!important}
- #newClientBtn{min-height:38px!important;padding:7px 10px!important;font-size:13px!important}
- .master-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-bottom:12px!important}
- .master-card{padding:10px!important;border-radius:12px!important;min-width:0!important}
- .master-card span{font-size:11px!important}.master-card strong{font-size:22px!important;line-height:1.05!important;margin:3px 0!important}.master-card small{font-size:9px!important;line-height:1.1!important}
- .section-head{gap:8px!important;align-items:flex-start!important}.section-head h2{margin-top:0!important}.section-head p{font-size:12px!important;line-height:1.3!important}
- #refreshMaster{min-height:36px!important;padding:6px 9px!important;font-size:12px!important}
- .master-client-tools{grid-template-columns:1fr 120px!important;gap:7px!important;margin:10px 0 12px!important}
- .master-client-tools input,.master-client-tools select{min-height:40px!important;padding:7px 9px!important;font-size:13px!important}
- .client-row-v74{padding:11px!important;gap:7px!important}
- .client-main>strong{font-size:18px!important}.client-main>.muted{font-size:12px!important}
- .client-screen-stats{gap:8px!important;margin-top:6px!important;font-size:12px!important}.client-last{margin-top:4px!important;font-size:11px!important;line-height:1.35!important}
- .plan-btn{min-height:34px!important;padding:5px 9px!important;font-size:12px!important;margin-top:6px!important}
- .master-screen-details summary{font-size:12px!important;padding:3px 0!important}
- .client-status .badge{font-size:11px!important}.master-actions .btn{min-height:32px!important;padding:5px 8px!important;font-size:11px!important}
+  .master-wrap{padding:14px 12px 28px!important}
+  .master-head{margin-bottom:12px!important}
+  .master-head h1{font-size:26px!important;margin-bottom:4px!important}
+  .master-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-bottom:12px!important}
+  .master-card{padding:10px 9px!important;border-radius:12px!important;min-height:74px!important}
+  .master-card span{font-size:11px!important;color:#9fb2c7!important}
+  .master-card strong{font-size:23px!important;line-height:1.05!important;margin:3px 0!important}
+  .master-card small{font-size:9px!important;line-height:1.1!important;display:block!important}
+  .card{padding:14px!important}
+  .section-head{gap:8px!important;align-items:flex-start!important}
+  .section-head h2{margin:0 0 3px!important}
+  .master-client-tools{margin:10px 0 12px!important;gap:7px!important}
+  .client-row.client-row-v74{padding:12px 0!important;gap:8px!important;grid-template-columns:1fr!important}
+  .client-main>strong{font-size:18px!important}
+  .client-main>.muted{font-size:12px!important}
+  .client-screen-stats{margin-top:6px!important;gap:10px!important;font-size:12px!important}
+  .client-last{font-size:11px!important;line-height:1.35!important;margin-top:4px!important}
+  .client-status{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;margin-top:2px!important}
+  .client-status>.muted{margin:0!important;font-size:11px!important}
+  .master-actions{margin-top:0!important;gap:6px!important}
+  .plan-btn{min-height:34px!important;padding:5px 10px!important;font-size:12px!important;margin-top:7px!important}
+  .master-screen-details{display:inline-block!important;margin:7px 0 0 8px!important;vertical-align:middle!important}
+  .master-screen-details summary{font-size:12px!important}
+  .client-status .btn{min-height:34px!important;padding:5px 10px!important;font-size:12px!important}
 }
-@media(max-width:390px){.master-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.master-client-tools{grid-template-columns:1fr!important}}
+@media(max-width:430px){
+  .master-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .master-card{padding:9px 7px!important}
+  .master-card strong{font-size:21px!important}
+  .master-card small{font-size:8.5px!important}
+}
 </style></head><body>
 <header class="topbar"><div class="brand"><span class="brand-mark">▣</span> Vitrine <b>Digital</b><small>MASTER 8.1</small></div><div class="top-actions"><span class="badge">Administrador Master</span><a class="btn ghost" href="index.html">Painel empresa</a><button id="masterLogout" class="btn ghost">Sair</button></div></header>
 <main class="master-wrap"><div class="master-head"><div><h1>Painel Master</h1><p class="muted">Clientes e empresas da Vitrine Digital.</p></div><button id="newClientBtn" class="btn">+ Novo cliente</button></div><div class="master-grid"><div class="master-card"><span>Empresas</span><strong id="mCompanies">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Ativas</span><strong id="mActive">0</strong><small class="muted">em operação</small></div><div class="master-card"><span>Usuários</span><strong id="mMembers">0</strong><small class="muted">acessos</small></div><div class="master-card"><span>Telas</span><strong id="mScreens">0</strong><small class="muted">cadastradas</small></div><div class="master-card"><span>Online</span><strong id="mOnline">0</strong><small class="muted">com comunicação recente</small></div><div class="master-card"><span>Offline</span><strong id="mOffline">0</strong><small class="muted">sem comunicação recente</small></div></div><div class="card"><div class="section-head"><div><h2>Clientes</h2><p class="muted">Gerencie empresas e acompanhe suas telas. <span id="masterUpdated"></span></p></div><button id="refreshMaster" class="btn ghost">Atualizar</button></div><div class="master-client-tools">
