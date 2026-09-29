@@ -87,10 +87,17 @@ async function renderMyPlan(){
  if(!db||!vdCompany){cur.innerHTML='<strong>Plano atual</strong><p class="muted">Conecte o Supabase e entre na sua empresa para consultar o plano.</p>';opts.innerHTML='';return}
  try{
   const used=(demo.screens||[]).filter(x=>String(x.company_id||'')===String(vdCompany.id)&&x.active!==false).length;
-  const {data:company,error:ce}=await db.from('companies').select('id,name,plan_name,screen_limit').eq('id',vdCompany.id).single();if(ce)throw ce;
+  const {data:company,error:ce}=await db.from('companies').select('id,name,plan_name,screen_limit,subscription_status,current_period_start,current_period_end,grace_until').eq('id',vdCompany.id).single();if(ce)throw ce;
   const {data:plans,error:pe}=await db.from('plans').select('id,name,screen_limit,monthly_price,active,sort_order').eq('active',true).order('sort_order',{ascending:true});if(pe)throw pe;
   const limit=Number(company.screen_limit||1);
-  cur.innerHTML=`<div class="section-head"><div><span class="muted">Plano atual</span><h2>${esc(company.plan_name||limit+' tela'+(limit===1?'':'s'))}</h2><p>${used} de ${limit} tela${limit===1?'':'s'} em uso</p></div><span class="badge">${used}/${limit}</span></div>`;
+  const status=String(company.subscription_status||'active');
+  const statusLabel=status==='active'?'Ativa':status==='past_due'?'Pagamento pendente':status==='suspended'?'Suspensa':status;
+  const end=company.current_period_end?new Date(company.current_period_end):null;
+  const grace=company.grace_until?new Date(company.grace_until):null;
+  const fmt=d=>d&&Number.isFinite(d.getTime())?d.toLocaleDateString('pt-BR'):'—';
+  const days=end?Math.max(0,Math.ceil((end.getTime()-Date.now())/86400000)):null;
+  const statusNote=status==='active'?(days===null?'Assinatura ativa':days===0?'Vence hoje':`${days} dia${days===1?'':'s'} restante${days===1?'':'s'}`):status==='past_due'?`Período de tolerância até ${fmt(grace)}`:'Regularize o pagamento para reativar a programação.';
+  cur.innerHTML=`<div class="section-head"><div><span class="muted">Plano atual</span><h2>${esc(company.plan_name||limit+' tela'+(limit===1?'':'s'))}</h2><p>${used} de ${limit} tela${limit===1?'':'s'} em uso</p></div><span class="badge">${used}/${limit}</span></div><div class="cards" style="margin-top:14px"><div class="card stat"><span>Status da assinatura</span><strong>${esc(statusLabel)}</strong><small>${esc(statusNote)}</small></div><div class="card stat"><span>Próximo vencimento</span><strong>${fmt(end)}</strong><small>${status==='active'?'Renovação a cada 30 dias':'Confira a situação da assinatura'}</small></div>${grace?`<div class="card stat"><span>Tolerância</span><strong>${fmt(grace)}</strong><small>Após esta data, a reprodução é suspensa.</small></div>`:''}</div>`;
   opts.innerHTML=(plans||[]).map(p=>{const pl=Number(p.screen_limit||1),price=Number(p.monthly_price||0),current=pl===limit;return `<div class="card"><span class="muted">${current?'Seu plano':'Opção'}</span><h2>${esc(p.name)}</h2><p><b>${pl}</b> tela${pl===1?'':'s'} · <b>R$ ${price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/mês</b></p><button class="btn ${current?'ghost':''}" type="button" data-pay-plan="${p.id}" data-pay-name="${esc(p.name)}" data-pay-limit="${pl}" data-pay-price="${price}" ${current?'disabled':''}>${current?'Plano atual':'Assinar / Pagar'}</button></div>`}).join('')||'<p class="muted">Nenhum plano disponível.</p>';
   opts.onclick=async e=>{
    const b=e.target.closest('[data-pay-plan]');if(!b)return;
