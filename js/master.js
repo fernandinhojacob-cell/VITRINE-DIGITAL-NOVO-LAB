@@ -59,40 +59,7 @@ if(filter)filter.onchange=()=>{masterFilter=filter.value||"all";load().catch(e=>
 $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget),btn=e.currentTarget.querySelector('button[type="submit"]'),msg=$("#masterMsg");btn.disabled=true;btn.textContent="Criando…";msg.textContent="";try{const {data,error}=await db.functions.invoke("master-create-client",{body:{name:f.get("name"),email:f.get("email"),password:f.get("password")}});if(error)throw error;if(data?.error)throw new Error(data.error);msg.textContent="✓ Cliente criado com sucesso.";e.currentTarget.reset();await load();setTimeout(()=>modal(false),700)}catch(err){msg.textContent="Erro: "+(err.message||String(err))}finally{btn.disabled=false;btn.textContent="Criar empresa e acesso"}};Promise.all([load(),loadPlans()]).catch(e=>alert("Erro ao carregar Painel Master: "+e.message))})();
 
 
-;(()=> {
- function compactClients(){
-   const host=document.getElementById("clientList"); if(!host)return;
-   const cards=[...host.children].filter(el=>el.nodeType===1);
-   cards.forEach(card=>{
-     if(card.querySelector(":scope > .vd-client-summary")) return;
-     card.classList.add("client-card");
-     const text=card.innerText||"";
-     const lines=text.split("\n").map(x=>x.trim()).filter(Boolean);
-     const name=(lines[0]||"Cliente").replace(/^(Ativa|Inativa)\s*/i,"").trim();
-     const screenMatch=text.match(/(\d+)\s+tela\(s\)/i);
-     const onlineMatch=text.match(/(\d+)\s+online/i);
-     const active=/\bAtiva\b/i.test(text)&&!/\bInativa\b/i.test(lines.slice(0,3).join(" "));
-     const summary=document.createElement("div");
-     summary.className="vd-client-summary";
-     summary.innerHTML=`<div class="vd-client-summary-main"><div class="vd-client-summary-name"></div><div class="vd-client-summary-meta"></div></div><button type="button" class="vd-client-open" aria-expanded="false"></button>`;
-     summary.querySelector(".vd-client-summary-name").textContent=name;
-     summary.querySelector(".vd-client-summary-meta").textContent=`${active?"Ativa":"Inativa"} · ${screenMatch?screenMatch[1]:"0"} tela(s) · ${onlineMatch?onlineMatch[1]:"0"} online`;
-     card.prepend(summary);
-   });
- }
- function observe(){
-   const host=document.getElementById("clientList");if(!host)return;
-   compactClients();
-   new MutationObserver(()=>compactClients()).observe(host,{childList:true});
-   host.addEventListener("click",e=>{
-     const b=e.target.closest(".vd-client-open"); if(!b)return;
-     const card=b.closest(".client-card"), opening=!card.classList.contains("vd-open");
-     host.querySelectorAll(".client-card.vd-open").forEach(c=>{c.classList.remove("vd-open");const x=c.querySelector(".vd-client-open");if(x)x.setAttribute("aria-expanded","false")});
-     if(opening){card.classList.add("vd-open");b.setAttribute("aria-expanded","true")}
-   });
- }
- if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",observe);else observe();
-})();
+
 
 
 ;(()=> {
@@ -123,4 +90,49 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
   [["uMedia",A.length],["uStorage",fmt(b)],["uScreens",S.length],["uAvg",fmt(S.length?b/S.length:0)]].forEach(([id,v])=>{let e=document.getElementById(id);if(e)e.textContent=v});
  }
  window.addEventListener("load",()=>fill().catch(()=>{}),{once:true});
+})();
+
+
+;(()=> {
+ function enhance(){
+   const host=document.getElementById("clientList"); if(!host)return;
+   [...host.children].forEach(card=>{
+     if(card.nodeType!==1 || card.dataset.vdCompact==="1")return;
+     const originalText=(card.innerText||"").trim();
+     if(!originalText)return;
+     const lines=originalText.split("\n").map(s=>s.trim()).filter(Boolean);
+     // Company name is the first visible line from the original renderer.
+     let name=lines[0]||"Cliente";
+     // Strip metadata if original renderer places it on the same line.
+     name=name.split(/(?=\s+[a-z0-9-]+\s*•)/i)[0].trim();
+     const sm=originalText.match(/(\d+)\s+tela\(s\)/i);
+     const om=originalText.match(/(\d+)\s+online/i);
+     const inactive=/\bInativa\b/i.test(originalText);
+     const details=document.createElement("div");
+     details.className="vd-client-details";
+     while(card.firstChild)details.appendChild(card.firstChild);
+     const summary=document.createElement("div");
+     summary.className="vd-client-summary";
+     const main=document.createElement("div");main.className="vd-client-summary-main";
+     const nm=document.createElement("div");nm.className="vd-client-summary-name";nm.textContent=name;
+     const meta=document.createElement("div");meta.className="vd-client-summary-meta";
+     meta.textContent=`${inactive?"Inativa":"Ativa"} · ${sm?sm[1]:"0"} tela(s) · ${om?om[1]:"0"} online`;
+     main.append(nm,meta);
+     const btn=document.createElement("button");btn.type="button";btn.className="vd-client-open";btn.textContent="Abrir";btn.setAttribute("aria-expanded","false");
+     summary.append(main,btn);card.append(summary,details);
+     card.classList.add("vd-client-card");card.dataset.vdCompact="1";
+   });
+ }
+ function init(){
+   const host=document.getElementById("clientList");if(!host)return;
+   enhance();
+   new MutationObserver(enhance).observe(host,{childList:true});
+   host.addEventListener("click",e=>{
+     const b=e.target.closest(".vd-client-open");if(!b)return;
+     const card=b.closest(".vd-client-card"),open=!card.classList.contains("vd-open");
+     host.querySelectorAll(".vd-client-card.vd-open").forEach(c=>{c.classList.remove("vd-open");let x=c.querySelector(".vd-client-open");if(x){x.textContent="Abrir";x.setAttribute("aria-expanded","false")}});
+     if(open){card.classList.add("vd-open");b.textContent="Fechar";b.setAttribute("aria-expanded","true")}
+   });
+ }
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
