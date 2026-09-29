@@ -73,11 +73,11 @@ async function manage(body){const {data,error}=await db.functions.invoke("master
 $("#clientList").onclick=async e=>{
 const openBtn=e.target.closest("[data-client-open]");
 if(openBtn){
- const card=openBtn.closest("[data-client-card]"),details=card?.querySelector(".vd-client-details");
- const willOpen=details?.hidden;
- document.querySelectorAll("#clientList .vd-client-details").forEach(d=>d.hidden=true);
- document.querySelectorAll("#clientList [data-client-open]").forEach(b=>b.textContent="Abrir");
- if(details&&willOpen){details.hidden=false;openBtn.textContent="Fechar"}
+ const companyId=openBtn.dataset.clientOpen;
+ if(companyId){
+   localStorage.setItem("vd_active_company_id",companyId);
+   location.href="index.html?master_company="+encodeURIComponent(companyId);
+ }
  return;
 }const p=e.target.closest("[data-plan]");if(p){const current=Number(p.dataset.planLimit||1),raw=prompt("Limite de telas deste cliente:",String(current));if(raw===null)return;const limit=Number(raw);if(!Number.isInteger(limit)||limit<1||limit>1000){alert("Informe um número inteiro entre 1 e 1000.");return}p.disabled=true;try{await manage({action:"set_plan",company_id:p.dataset.plan,screen_limit:limit,plan_name:`${limit} tela${limit===1?"":"s"}`});await load();alert("Plano atualizado.")}catch(err){alert("Erro: "+err.message)}finally{p.disabled=false}return}const t=e.target.closest("[data-toggle]");if(t){const active=t.dataset.active==="true";if(!confirm(active?"Desativar este cliente? O acesso será bloqueado, mas os dados serão preservados.":"Reativar este cliente?"))return;t.disabled=true;try{await manage({action:"toggle_active",company_id:t.dataset.toggle,active:!active});await load()}catch(err){alert("Erro: "+err.message)}finally{t.disabled=false}return}const d=e.target.closest("[data-delete]");if(d){const name=d.dataset.name;if(!confirm(`EXCLUIR DEFINITIVAMENTE ${name}? Esta ação remove a empresa, acessos e dados vinculados e não pode ser desfeita.`))return;if(!confirm(`Confirma novamente a exclusão definitiva de ${name}?`))return;d.disabled=true;try{await manage({action:"delete",company_id:d.dataset.delete});await load();alert("Cliente excluído.")}catch(err){alert("Erro: "+err.message)}finally{d.disabled=false}}};
 const search=$("#masterClientSearch"),filter=$("#masterClientFilter");

@@ -16,12 +16,21 @@ async function initCompanyContext(){
  if(error)throw error;
  if(!members?.length)throw new Error('Seu usuário ainda não está vinculado a uma empresa.');
  const ids=members.map(m=>m.company_id);
- const {data:companies,error:companyError}=await db.from('companies').select('id,name,slug,active').in('id',ids).eq('active',true);
+ let {data:companies,error:companyError}=await db.from('companies').select('id,name,slug,active').in('id',ids).eq('active',true);
  if(companyError)throw companyError;
+ const masterCompanyId=new URLSearchParams(location.search).get('master_company');
+ if(masterCompanyId){
+   const {data:adminRows}=await db.from('app_admins').select('user_id,active').eq('user_id',session.user.id).eq('active',true).limit(1);
+   if(adminRows?.length){
+     const {data:masterCompany}=await db.from('companies').select('id,name,slug,active').eq('id',masterCompanyId).eq('active',true).maybeSingle();
+     if(masterCompany&&!companies?.some(c=>c.id===masterCompany.id))companies=[...(companies||[]),masterCompany];
+     if(masterCompany)localStorage.setItem('vd_active_company_id',masterCompany.id);
+   }
+ }
  if(!companies?.length)throw new Error('Nenhuma empresa ativa disponível.');
  const saved=localStorage.getItem('vd_active_company_id');
  const company=companies.find(c=>c.id===saved)||companies[0];
- const member=members.find(m=>m.company_id===company.id);
+ const member=members.find(m=>m.company_id===company.id)||{role:'master'};
  vdCompany={...company,role:member?.role||'member'};
  localStorage.setItem('vd_active_company_id',company.id);
  const badge=qs('#companyBadge');if(badge){badge.textContent=company.name+(member?.role==='owner'?' • Proprietário':'');badge.title='Empresa ativa no painel';}
