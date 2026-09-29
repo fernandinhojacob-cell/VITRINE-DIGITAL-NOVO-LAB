@@ -170,6 +170,16 @@ body[data-master-route="dashboard"] #billingSection,
 body[data-master-route="dashboard"] #plansSection,
 body[data-master-route="dashboard"] #usageSection{display:none!important}
 </style>
+<style id="dashboard-isolation-924">
+/* 9.2.4 — Dashboard só aparece na rota Dashboard */
+body:not([data-master-route="dashboard"]) .master-head,
+body:not([data-master-route="dashboard"]) .master-grid,
+body:not([data-master-route="dashboard"]) .master-kpis,
+body:not([data-master-route="dashboard"]) .kpi-grid,
+body:not([data-master-route="dashboard"]) #masterKpis,
+body:not([data-master-route="dashboard"]) #newClientBtn,
+body:not([data-master-route="dashboard"]) .new-client-btn{display:none!important}
+</style>
 </head><body><aside class="master-side" id="masterSide"><div class="master-side-title">Painel Master</div><nav class="master-nav">
 <button data-master-route="dashboard">▦ Dashboard</button><button data-master-route="clients">👥 Clientes</button><button data-master-route="reports">▤ Relatórios</button><button data-master-route="billing">◉ Cobrança</button><button data-master-route="plans">◇ Planos</button><button data-master-route="usage">↗ Consumo</button>
 </nav></aside><button class="master-menu-btn" id="masterMenuBtn">☰</button>
@@ -189,7 +199,7 @@ body[data-master-route="dashboard"] #usageSection{display:none!important}
 <section class="card" id="usageSection"><div class="section-head"><div><h2>Consumo da plataforma</h2><p class="muted">Uso catalogado, sem estimar egress.</p></div></div><div class="billing-summary"><div class="billing-kpi"><strong id="uMedia">0</strong><span>arquivos ativos</span></div><div class="billing-kpi"><strong id="uStorage">0 B</strong><span>armazenamento catalogado</span></div><div class="billing-kpi"><strong id="uScreens">0</strong><span>telas cadastradas</span></div><div class="billing-kpi"><strong id="uAvg">0 B</strong><span>média por tela</span></div></div></section>
 <section class="card master-plans-card" id="plansSection"><div class="section-head"><div><h2>Planos</h2><p class="muted">Configure nome, limite de telas e valor mensal.</p></div></div><div id="masterPlans" class="master-plans"></div></section></main>
 <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h2>Novo cliente</h2><form id="newClientForm" class="master-form"><label>Nome da empresa<input name="name" required placeholder="Ex.: Mercado Central"></label><label>E-mail do proprietário<input name="email" type="email" required placeholder="cliente@email.com"></label><label>Senha temporária<input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label><p class="muted">Cria a empresa e o acesso do proprietário.</p><button class="btn" type="submit">Criar empresa e acesso</button><div id="masterMsg" class="muted"></div></form></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.2.3-estavel"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.2.4-dashboard-isolado"></script>
 <script>
 (async function(){
   const host=document.getElementById("masterPlans");
