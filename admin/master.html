@@ -138,6 +138,21 @@ body[data-master-route="reports"] #clientsSection,
 body[data-master-route="usage"] #clientsSection{display:none!important}
 body[data-master-route="clients"] #billingSection{display:none!important}
 </style>
+<style id="master-route-fix-912">
+/* 9.1.2 — rotas exclusivas do Painel Master */
+#clientsSection,#reportsSection,#billingSection,#plansSection,#usageSection{display:none!important}
+body[data-master-route="clients"] #clientsSection{display:block!important}
+body[data-master-route="reports"] #reportsSection{display:block!important}
+body[data-master-route="billing"] #billingSection{display:block!important}
+body[data-master-route="plans"] #plansSection{display:block!important}
+body[data-master-route="usage"] #usageSection{display:block!important}
+/* Dashboard mostra somente cabeçalho e KPIs; seções funcionais ficam ocultas */
+body[data-master-route="dashboard"] #clientsSection,
+body[data-master-route="dashboard"] #reportsSection,
+body[data-master-route="dashboard"] #billingSection,
+body[data-master-route="dashboard"] #plansSection,
+body[data-master-route="dashboard"] #usageSection{display:none!important}
+</style>
 </head><body><aside class="master-side" id="masterSide"><div class="master-side-title">Painel Master</div><nav class="master-nav">
 <button data-master-route="dashboard">▦ Dashboard</button><button data-master-route="clients">👥 Clientes</button><button data-master-route="reports">▤ Relatórios</button><button data-master-route="billing">◉ Cobrança</button><button data-master-route="plans">◇ Planos</button><button data-master-route="usage">↗ Consumo</button>
 </nav></aside><button class="master-menu-btn" id="masterMenuBtn">☰</button>
@@ -153,9 +168,9 @@ body[data-master-route="clients"] #billingSection{display:none!important}
  <div class="billing-kpi"><strong id="bPastDue">0</strong><span>em atraso</span></div>
  <div class="billing-kpi"><strong id="bSuspended">0</strong><span>suspensas</span></div>
  <div class="billing-kpi"><strong id="bMRR">R$ 0</strong><span>MRR</span></div>
-</div><div id="billingList" class="billing-list"><p class="muted">Carregando cobranças…</p></div></section><section class="card master-plans-card"><div class="section-head"><div><h2>Planos</h2><p class="muted">Configure nome, limite de telas e valor mensal.</p></div></div><div id="masterPlans" class="master-plans"></div></section></main>
+</div><div id="billingList" class="billing-list"><p class="muted">Carregando cobranças…</p></div></section><section class="card master-plans-card" id="plansSection"><div class="section-head"><div><h2>Planos</h2><p class="muted">Configure nome, limite de telas e valor mensal.</p></div></div><div id="masterPlans" class="master-plans"></div></section></main>
 <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h2>Novo cliente</h2><form id="newClientForm" class="master-form"><label>Nome da empresa<input name="name" required placeholder="Ex.: Mercado Central"></label><label>E-mail do proprietário<input name="email" type="email" required placeholder="cliente@email.com"></label><label>Senha temporária<input name="password" type="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label><p class="muted">Cria a empresa e o acesso do proprietário.</p><button class="btn" type="submit">Criar empresa e acesso</button><div id="masterMsg" class="muted"></div></form></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.1.1-menu-limpo"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/master.js?v=9.1.2-rotas"></script>
 <script>
 (async function(){
   const host=document.getElementById("masterPlans");
