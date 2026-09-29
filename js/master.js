@@ -93,3 +93,34 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",observe);else observe();
 })();
+
+
+;(()=> {
+ const normalize=s=>({"dashboard":"dashboard","clientes":"clients","relatórios":"reports","relatorios":"reports","cobrança":"billing","cobranca":"billing","planos":"plans","consumo":"usage"}[String(s||"").trim().toLowerCase()]);
+ function setRoute(r){
+   r=normalize(r)||r||"dashboard";
+   document.body.dataset.masterRoute=r;
+   sessionStorage.setItem("vd_master_route",r);
+ }
+ document.addEventListener("click",e=>{
+   const a=e.target.closest("[data-master-route],[data-route],.master-nav a,.master-nav button,.master-drawer a,.master-drawer button");
+   if(!a)return;
+   const r=normalize(a.dataset.masterRoute||a.dataset.route||a.textContent);
+   if(r){e.preventDefault();setRoute(r);}
+ },true);
+ document.addEventListener("DOMContentLoaded",()=>setRoute(sessionStorage.getItem("vd_master_route")||"dashboard"));
+})();
+
+
+;(()=> {
+ const cfg=window.SUPABASE_CONFIG||{},db=window.supabase?.createClient(cfg.url,cfg.key); if(!db)return;
+ const fmt=n=>{n=Number(n||0);if(!n)return"0 B";let i=Math.min(Math.floor(Math.log(n)/Math.log(1024)),3),u=["B","KB","MB","GB"];return`${(n/1024**i).toLocaleString("pt-BR",{maximumFractionDigits:2})} ${u[i]}`};
+ async function fill(){
+  const [c,s,m,p]=await Promise.all([db.from("companies").select("id,name,active"),db.from("screens").select("id,company_id"),db.from("media").select("id,company_id,active,size_bytes"),db.from("playlists").select("id,company_id")]);
+  const C=c.data||[],S=s.data||[],M=m.data||[],P=p.data||[], host=document.getElementById("reportsList");
+  if(host)host.innerHTML=C.map(x=>`<div class="billing-row"><div class="billing-name">${String(x.name||"").replace(/[<>]/g,"")}</div><div class="billing-plan">${S.filter(y=>y.company_id===x.id).length} tela(s) · ${M.filter(y=>y.company_id===x.id&&y.active!==false).length} conteúdo(s) · ${P.filter(y=>y.company_id===x.id).length} playlist(s)</div></div>`).join("");
+  const A=M.filter(x=>x.active!==false),b=A.reduce((t,x)=>t+Number(x.size_bytes||0),0);
+  [["uMedia",A.length],["uStorage",fmt(b)],["uScreens",S.length],["uAvg",fmt(S.length?b/S.length:0)]].forEach(([id,v])=>{let e=document.getElementById(id);if(e)e.textContent=v});
+ }
+ window.addEventListener("load",()=>fill().catch(()=>{}),{once:true});
+})();
