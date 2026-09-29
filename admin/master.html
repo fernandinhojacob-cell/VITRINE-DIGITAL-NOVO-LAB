@@ -325,12 +325,13 @@ html,body{max-width:100%;overflow-x:hidden}
    const C=c.data||[],S=s.data||[],M=m.data||[],P=p.data||[];
    let H=[];
    try{
-     const hb=await client.from("screen_heartbeat").select("screen_id,last_seen_at");
+     let hb=await client.from("screen_heartbeat").select("*");
      if(!hb.error) H=hb.data||[];
    }catch(_){}
    const latestByScreen={};
    H.forEach(v=>{
-     const t=new Date(v.last_seen_at).getTime();
+     const raw=v.last_seen_at||v.last_seen||v.heartbeat_at||v.updated_at||v.created_at;
+     const t=raw?new Date(raw).getTime():NaN;
      if(Number.isFinite(t) && (!latestByScreen[v.screen_id] || t>latestByScreen[v.screen_id])) latestByScreen[v.screen_id]=t;
    });
    const now=Date.now();
@@ -352,7 +353,7 @@ html,body{max-width:100%;overflow-x:hidden}
        <div class="vd931-details" hidden>
          <div><b>Telas cadastradas:</b> ${cs.length}</div>
          <div><b>Online:</b> ${online} · <b>Offline:</b> ${offline}</div>
-         <div><b>Último contato:</b> ${last?ago(last):"—"}</div>
+         <div><b>Último contato:</b> ${last?ago(last):"Sem registro"}</div>
          <div><b>Conteúdos ativos:</b> ${cm.length}</div>
          <div><b>Playlists:</b> ${cp.length}</div>
          <div><b>Empresa:</b> ${x.active===false?"Inativa":"Ativa"}</div>
