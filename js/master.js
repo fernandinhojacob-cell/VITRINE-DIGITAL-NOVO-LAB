@@ -57,3 +57,29 @@ const search=$("#masterClientSearch"),filter=$("#masterClientFilter");
 if(search)search.oninput=()=>{masterQuery=search.value||"";load().catch(e=>alert(e.message))};
 if(filter)filter.onchange=()=>{masterFilter=filter.value||"all";load().catch(e=>alert(e.message))};
 $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget),btn=e.currentTarget.querySelector('button[type="submit"]'),msg=$("#masterMsg");btn.disabled=true;btn.textContent="Criando…";msg.textContent="";try{const {data,error}=await db.functions.invoke("master-create-client",{body:{name:f.get("name"),email:f.get("email"),password:f.get("password")}});if(error)throw error;if(data?.error)throw new Error(data.error);msg.textContent="✓ Cliente criado com sucesso.";e.currentTarget.reset();await load();setTimeout(()=>modal(false),700)}catch(err){msg.textContent="Erro: "+(err.message||String(err))}finally{btn.disabled=false;btn.textContent="Criar empresa e acesso"}};Promise.all([load(),loadPlans()]).catch(e=>alert("Erro ao carregar Painel Master: "+e.message))})();
+
+
+;(()=> {
+ const cfg=window.SUPABASE_CONFIG||{}, db=window.supabase?.createClient(cfg.url,cfg.key);
+ if(!db)return;
+ const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+ const fmtBytes=n=>{n=Number(n||0);if(!n)return "0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.floor(Math.log(n)/Math.log(1024)),3);return `${(n/1024**i).toLocaleString("pt-BR",{maximumFractionDigits:2})} ${u[i]}`};
+ async function loadMasterExtras(){
+   const host=document.getElementById("reportsList");
+   const [cq,sq,mq,pq]=await Promise.all([
+     db.from("companies").select("id,name,active").order("name"),
+     db.from("screens").select("id,company_id,active"),
+     db.from("media").select("id,company_id,active,size_bytes"),
+     db.from("playlists").select("id,company_id")
+   ]);
+   const companies=cq.data||[], screens=sq.data||[], media=mq.data||[], playlists=pq.data||[];
+   if(host) host.innerHTML=companies.map(c=>{
+     const sc=screens.filter(x=>x.company_id===c.id).length, me=media.filter(x=>x.company_id===c.id&&x.active!==false).length, pl=playlists.filter(x=>x.company_id===c.id).length;
+     return `<div class="billing-row"><div class="billing-top"><div><div class="billing-name">${esc(c.name)}</div><div class="billing-plan">${sc} tela(s) · ${me} conteúdo(s) · ${pl} playlist(s)</div></div><span class="billing-status ${c.active?"active":"suspended"}">${c.active?"Ativa":"Inativa"}</span></div></div>`;
+   }).join("")||'<p class="muted">Nenhuma empresa cadastrada.</p>';
+   const activeMedia=media.filter(x=>x.active!==false), bytes=activeMedia.reduce((s,x)=>s+Number(x.size_bytes||0),0);
+   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+   set("uMedia",activeMedia.length); set("uStorage",fmtBytes(bytes)); set("uScreens",screens.length); set("uAvg",fmtBytes(screens.length?bytes/screens.length:0));
+ }
+ window.addEventListener("load",()=>loadMasterExtras().catch(()=>{}),{once:true});
+})();
