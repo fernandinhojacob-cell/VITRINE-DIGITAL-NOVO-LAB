@@ -112,7 +112,10 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
  async function fill(){
   const [c,s,m,p]=await Promise.all([db.from("companies").select("id,name,active"),db.from("screens").select("id,company_id"),db.from("media").select("id,company_id,active,size_bytes"),db.from("playlists").select("id,company_id")]);
   const C=c.data||[],S=s.data||[],M=m.data||[],P=p.data||[], host=document.getElementById("reportsList");
-  if(host)host.innerHTML=C.map(x=>`<div class="billing-row"><div class="billing-name">${String(x.name||"").replace(/[<>]/g,"")}</div><div class="billing-plan">${S.filter(y=>y.company_id===x.id).length} tela(s) · ${M.filter(y=>y.company_id===x.id&&y.active!==false).length} conteúdo(s) · ${P.filter(y=>y.company_id===x.id).length} playlist(s)</div></div>`).join("");
+  if(host)host.innerHTML=C.map(x=>{
+   const cs=S.filter(y=>y.company_id===x.id), cm=M.filter(y=>y.company_id===x.id&&y.active!==false), cp=P.filter(y=>y.company_id===x.id);
+   return `<div class="billing-row vd-report-card" data-report-card="${x.id}"><div class="vd-report-summary"><div><div class="billing-name">${String(x.name||"").replace(/[<>]/g,"")}</div><div class="billing-plan">${cs.length} tela(s) · ${cm.length} conteúdo(s) · ${cp.length} playlist(s)</div></div><button type="button" class="btn ghost" data-report-open="${x.id}">Abrir</button></div><div class="vd-report-details" hidden><div><b>Telas:</b> ${cs.length}</div><div><b>Conteúdos:</b> ${cm.length}</div><div><b>Playlists:</b> ${cp.length}</div></div></div>`;
+  }).join("");
   const A=M.filter(x=>x.active!==false),b=A.reduce((t,x)=>t+Number(x.size_bytes||0),0);
   [["uMedia",A.length],["uStorage",fmt(b)],["uScreens",S.length],["uAvg",`${S.filter(s=>s.online===true).length} de ${S.length}`]].forEach(([id,v])=>{let e=document.getElementById(id);if(e)e.textContent=v});
  }
@@ -150,3 +153,5 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
    if(t==="consumo") setTimeout(vd929OnlineKpi,500);
  },true);
 })();
+
+;(()=>{document.addEventListener("click",e=>{const b=e.target.closest("[data-report-open]");if(!b)return;const d=b.closest("[data-report-card]")?.querySelector(".vd-report-details"),open=d?.hidden;document.querySelectorAll("#reportsList .vd-report-details").forEach(x=>x.hidden=true);document.querySelectorAll("#reportsList [data-report-open]").forEach(x=>x.textContent="Abrir");if(d&&open){d.hidden=false;b.textContent="Fechar"}},true)})();
