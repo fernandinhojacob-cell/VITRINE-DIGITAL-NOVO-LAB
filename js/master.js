@@ -13,7 +13,7 @@ const applyClientFilters=()=>{
 };
 const modal=on=>$("#modal").classList.toggle("hidden",!on);$("#newClientBtn").onclick=()=>modal(true);$("#closeModal").onclick=()=>modal(false);$("#masterLogout").onclick=async()=>{await db.auth.signOut();location.replace("login.html")};
 const lastContact=s=>s.last_contact||s.updated_at||null;
-const isOnline=s=>{const t=lastContact(s)?new Date(lastContact(s)).getTime():0;return !!t&&(Date.now()-t)<=60000};
+const isOnline=s=>{const t=lastContact(s)?new Date(lastContact(s)).getTime():0;return !!t&&(Date.now()-t)<=120000};
 const ago=value=>{if(!value)return "Nunca comunicou";const sec=Math.max(0,Math.floor((Date.now()-new Date(value).getTime())/1000));if(sec<60)return `há ${sec}s`;const min=Math.floor(sec/60);if(min<60)return `há ${min} min`;const h=Math.floor(min/60);if(h<24)return `há ${h}h`;const d=Math.floor(h/24);return `há ${d} dia${d===1?'':'s'}`};
 const contactText=value=>value?`${ago(value)} • ${new Date(value).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}`:"Nunca comunicou";
 async function loadPlans(){
@@ -174,7 +174,7 @@ $("#refreshMaster").onclick=()=>load().catch(e=>alert(e.message));$("#newClientF
          const t=new Date(x.last_seen_at).getTime();
          if(!latest[x.screen_id] || t>latest[x.screen_id]) latest[x.screen_id]=t;
        });
-       online=ids.filter(id=>latest[id] && now-latest[id] <= 90000).length;
+       online=ids.filter(id=>latest[id] && now-latest[id] <= 120000).length;
      }
      el.textContent=`${online} de ${ids.length}`;
    }catch(_){}
