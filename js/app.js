@@ -249,17 +249,21 @@ function renderScreens(screens,playlists){
    </article>`}).join('')||`<div class="card"><p class="muted">Nenhuma tela encontrada.</p></div>`;
 }
 function mediaUsage(id){const links=(demo.playlist_items||[]).filter(i=>String(i.media_id)===String(id));const pids=[...new Set(links.map(i=>String(i.playlist_id)))];const pls=pids.map(pid=>demo.playlists.find(p=>String(p.id)===pid)).filter(Boolean);const sids=[...new Set((demo.schedules||[]).filter(sc=>pids.includes(String(sc.playlist_id))).map(sc=>String(sc.id)))];return {links,pls,schedules:sids.length}}
-const ADMIN_THUMB_CACHE='vitrine-admin-thumbs-v1';
-const adminThumbMemo=new Map();
+const ADMIN_THUMB_DB='vitrine_admin_thumbs_v2',ADMIN_THUMB_STORE='files';
+const adminThumbMemo=new Map(),adminThumbPending=new Map();
+function adminThumbDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(ADMIN_THUMB_DB,1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(ADMIN_THUMB_STORE))d.createObjectStore(ADMIN_THUMB_STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function adminThumbGet(url){const d=await adminThumbDb();return new Promise((resolve,reject)=>{const tx=d.transaction(ADMIN_THUMB_STORE,'readonly'),r=tx.objectStore(ADMIN_THUMB_STORE).get(url);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error)})}
+async function adminThumbPut(url,blob){const d=await adminThumbDb();return new Promise((resolve,reject)=>{const tx=d.transaction(ADMIN_THUMB_STORE,'readwrite');tx.objectStore(ADMIN_THUMB_STORE).put(blob,url);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}
 async function adminCachedThumb(url){
  if(!url)return '';
  if(adminThumbMemo.has(url))return adminThumbMemo.get(url);
- try{
-  const cache=await caches.open(ADMIN_THUMB_CACHE);
-  let r=await cache.match(url);
-  if(!r){r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('thumb '+r.status);await cache.put(url,r.clone())}
-  const blob=await r.blob(),obj=URL.createObjectURL(blob);adminThumbMemo.set(url,obj);return obj;
- }catch(e){console.warn('admin thumb cache',e);return ''}
+ if(adminThumbPending.has(url))return adminThumbPending.get(url);
+ const task=(async()=>{try{
+  let blob=await adminThumbGet(url);
+  if(!blob){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('thumb '+r.status);blob=await r.blob();await adminThumbPut(url,blob)}
+  const obj=URL.createObjectURL(blob);adminThumbMemo.set(url,obj);return obj;
+ }catch(e){console.warn('admin thumb indexeddb',e);return ''}finally{adminThumbPending.delete(url)}})();
+ adminThumbPending.set(url,task);return task;
 }
 async function hydrateAdminThumbs(root=document){
  const imgs=[...root.querySelectorAll('img[data-admin-thumb]')];
