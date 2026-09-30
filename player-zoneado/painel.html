@@ -6,11 +6,36 @@
 <div class="box"><h2>Faixa inferior</h2><label>Itens separados por vírgula</label><input id="items" value="EVENTOS, EMPRESAS, PROMOÇÕES, INFORMAÇÕES"></div>
 <button class="btn" id="save">Salvar zoneamento</button><a class="btn" id="open" target="_blank">Abrir Player Zoneado</a>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script>
-(async()=>{const db=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key),{data:{session}}=await db.auth.getSession();if(!session){location.href="../admin/login.html";return}
-const {data:ss}=await db.from("screens").select("id,name,code,company_id").eq("active",true).order("name");screen.innerHTML=(ss||[]).map(s=>`<option value="${s.id}" data-code="${s.code}" data-company="${s.company_id}">${s.name} — ${s.code}</option>`).join("");
-const {data:mm}=await db.from("media").select("id,name,type,mime_type,company_id").eq("active",true).order("name");function medias(sel,cid,val){sel.innerHTML='<option value="">Sem mídia</option>'+(mm||[]).filter(m=>m.company_id===cid).map(m=>`<option value="${m.id}" ${m.id===val?"selected":""}>${m.name}</option>`).join("")}
-async function load(){let o=screen.selectedOptions[0];if(!o)return;let cid=o.dataset.company;const {data:c}=await db.from("zone_layouts").select("*").eq("screen_id",screen.value).maybeSingle();layout.value=c?.layout||"main_side_footer";main.value=c?.main_pct||72;footer.value=c?.footer_pct||22;medias(m1,cid,c?.zone1_media_id);medias(m2,cid,c?.zone2_media_id);t1.value=c?.zone1_title||"";x1.value=c?.zone1_text||"";t2.value=c?.zone2_title||"";x2.value=c?.zone2_text||"";items.value=(c?.footer_items||["EVENTOS","EMPRESAS","PROMOÇÕES","INFORMAÇÕES"]).join(", ");open.href="index.html?code="+encodeURIComponent(o.dataset.code)+"&v=6"}
-screen.onchange=load;await load();
-save.onclick=async()=>{let o=screen.selectedOptions[0],row={screen_id:screen.value,company_id:o.dataset.company,layout:layout.value,main_pct:+main.value,footer_pct:+footer.value,zone1_media_id:m1.value||null,zone2_media_id:m2.value||null,zone1_title:t1.value,zone1_text:x1.value,zone2_title:t2.value,zone2_text:x2.value,footer_items:items.value.split(",").map(x=>x.trim()).filter(Boolean),active:true,updated_at:new Date().toISOString()};let {error}=await db.from("zone_layouts").upsert(row,{onConflict:"screen_id"});alert(error?"Erro: "+error.message:"Zoneamento salvo com sucesso.");if(!error)await load()}
+(async()=>{
+const $=id=>document.getElementById(id);
+const screenEl=$("screen"),layoutEl=$("layout"),mainEl=$("main"),footerEl=$("footer"),m1El=$("m1"),m2El=$("m2"),t1El=$("t1"),x1El=$("x1"),t2El=$("t2"),x2El=$("x2"),itemsEl=$("items"),openEl=$("open"),saveEl=$("save");
+const db=supabase.createClient(window.SUPABASE_CONFIG.url,window.SUPABASE_CONFIG.key);
+const {data:{session}}=await db.auth.getSession();
+if(!session){location.href="../admin/login.html";return}
+const {data:ss,error:se}=await db.from("screens").select("id,name,code,company_id").eq("active",true).order("name");
+if(se){alert("Erro ao carregar telas: "+se.message);return}
+screenEl.innerHTML=(ss||[]).map(s=>`<option value="${s.id}" data-code="${s.code}" data-company="${s.company_id}">${s.name} — ${s.code}</option>`).join("");
+if(!(ss||[]).length){screenEl.innerHTML='<option value="">Nenhuma tela disponível</option>';return}
+const {data:mm,error:me}=await db.from("media").select("id,name,type,mime_type,company_id").eq("active",true).order("name");
+if(me){alert("Erro ao carregar mídias: "+me.message);return}
+function medias(sel,cid,val){sel.innerHTML='<option value="">Sem mídia</option>'+(mm||[]).filter(m=>m.company_id===cid).map(m=>`<option value="${m.id}" ${m.id===val?"selected":""}>${m.name}</option>`).join("")}
+async function load(){
+ let o=screenEl.selectedOptions[0]; if(!o||!o.value)return;
+ let cid=o.dataset.company;
+ const {data:c,error}=await db.from("zone_layouts").select("*").eq("screen_id",screenEl.value).maybeSingle();
+ if(error){alert("Erro ao carregar zoneamento: "+error.message);return}
+ layoutEl.value=c?.layout||"main_side_footer";mainEl.value=c?.main_pct||72;footerEl.value=c?.footer_pct||22;
+ medias(m1El,cid,c?.zone1_media_id);medias(m2El,cid,c?.zone2_media_id);
+ t1El.value=c?.zone1_title||"";x1El.value=c?.zone1_text||"";t2El.value=c?.zone2_title||"";x2El.value=c?.zone2_text||"";
+ itemsEl.value=(c?.footer_items||["EVENTOS","EMPRESAS","PROMOÇÕES","INFORMAÇÕES"]).join(", ");
+ openEl.href="index.html?code="+encodeURIComponent(o.dataset.code)+"&v=6.1";
+}
+screenEl.onchange=load;await load();
+saveEl.onclick=async()=>{
+ let o=screenEl.selectedOptions[0]; if(!o||!o.value)return;
+ let row={screen_id:screenEl.value,company_id:o.dataset.company,layout:layoutEl.value,main_pct:+mainEl.value,footer_pct:+footerEl.value,zone1_media_id:m1El.value||null,zone2_media_id:m2El.value||null,zone1_title:t1El.value,zone1_text:x1El.value,zone2_title:t2El.value,zone2_text:x2El.value,footer_items:itemsEl.value.split(",").map(x=>x.trim()).filter(Boolean),active:true,updated_at:new Date().toISOString()};
+ let {error}=await db.from("zone_layouts").upsert(row,{onConflict:"screen_id"});
+ alert(error?"Erro: "+error.message:"Zoneamento salvo com sucesso.");if(!error)await load();
+};
 })();
 </script></body></html>
