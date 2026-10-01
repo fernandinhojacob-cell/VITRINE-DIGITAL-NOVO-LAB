@@ -83,15 +83,3 @@ async function moveItem(z,i,dir){let a=(window.zoneLists&&window.zoneLists[z])||
 $("saveFoot").onclick=()=>saveAll();$("save").onclick=()=>saveAll();
 async function saveAll(){let o=$("scr").selectedOptions[0];if(o?.dataset.code==="TV-85CCD986"){alert("Studio A está protegido durante os testes. Selecione TV-ZONE-TESTE.");return}let {error}=await db.from("zone_layouts").update({layout:layoutName,main_pct:+$("mp").value,footer_pct:+$("fp").value,footer_items:$("foot").value.split(",").map(x=>x.trim()).filter(Boolean),transition_main:$("tr0").value,transition_zone1:$("tr1").value,transition_zone2:$("tr2").value,schedule_main_enabled:Boolean($("sc0").checked),schedule_main_start:$("s0").value||null,schedule_main_end:$("e0").value||null,schedule_zone1_enabled:Boolean($("sc1").checked),schedule_zone1_start:$("s1").value||null,schedule_zone1_end:$("e1").value||null,schedule_zone2_enabled:Boolean($("sc2").checked),schedule_zone2_start:$("s2").value||null,schedule_zone2_end:$("e2").value||null,updated_at:new Date().toISOString()}).eq("id",layout.id);alert(error?error.message:"Layout salvo.");if(!error)await load()}
 </script></body></html>
-/* V12.6 - ajuste inteligente de mídia */
-.media-artwork {
-  object-fit: contain !important;
-  width: 100%;
-  height: 100%;
-  background: #000;
-}
-.media-video {
-  object-fit: cover !important;
-  width: 100%;
-  height: 100%;
-}

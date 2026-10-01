@@ -8,15 +8,3 @@ async function upload(z){let inp=$("up"+z),files=[...inp.files];if(!files.length
 async function lists(){let {data:a}=await db.from("zone_media_items").select("*").eq("zone_layout_id",layoutId).eq("active",true).order("sort_order");for(let z=1;z<=2;z++)$("list"+z).innerHTML=(a||[]).filter(x=>x.zone_no===z).map(x=>`<div class="item"><span>${x.file_name}</span><button class="del" onclick="del('${x.id}')">Excluir</button></div>`).join("")||'<p class="muted">Nenhum arquivo.</p>'}
 async function del(id){if(!confirm("Excluir este arquivo da zona?"))return;await db.from("zone_media_items").update({active:false}).eq("id",id);await lists()}
 </script></body></html>
-/* V12.6 - ajuste inteligente de mídia */
-.media-artwork {
-  object-fit: contain !important;
-  width: 100%;
-  height: 100%;
-  background: #000;
-}
-.media-video {
-  object-fit: cover !important;
-  width: 100%;
-  height: 100%;
-}
