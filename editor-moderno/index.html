@@ -3,25 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vitrine Digital V14.2</title>
+<title>Vitrine Digital V14.3</title>
 <link rel="stylesheet" href="editor.css">
 </head>
 <body>
 <header>
 <div class="brand">▶ VITRINE DIGITAL<br><small>Editor Visual</small></div>
 <div class="info"><b>TV-001</b><br>Recepção Hospital<br>Principal + 2 zonas</div>
-<div class="actions"><button>Visualizar</button><button>Salvar</button></div>
+<div class="buttons"><button>Visualizar</button><button>Salvar</button></div>
 </header>
 
 <main>
-<section class="preview">
+<section>
 <h1>Editor Visual</h1>
 <p>Configure o layout e gerencie cada zona</p>
+
 <div class="screen">
-<div class="main-zone">PRINCIPAL<br><span>70%</span></div>
-<div class="bottom">
-<div class="zone z1">ZONA 1<br><span>15%</span></div>
-<div class="zone z2">ZONA 2<br><span>15%</span></div>
+<div class="mainzone" onclick="alert('Editar Principal')">
+PRINCIPAL<br><small>70%</small><button>Editar</button>
+</div>
+<div class="row">
+<div class="zone z1" onclick="alert('Editar Zona 1')">
+ZONA 1<br><small>15%</small><button>Editar</button>
+</div>
+<div class="zone z2" onclick="alert('Editar Zona 2')">
+ZONA 2<br><small>15%</small><button>Editar</button>
+</div>
 </div>
 </div>
 </section>
@@ -31,6 +38,10 @@
 <div class="card">🖼️ Principal <b>70%</b></div>
 <div class="card">🟩 Zona 1 <b>15%</b></div>
 <div class="card">🟪 Zona 2 <b>15%</b></div>
+
+<h2>Conteúdo</h2>
+<div class="card">Playlist: selecionar</div>
+<div class="card">Duração: 15 segundos</div>
 </aside>
 </main>
 </body>
